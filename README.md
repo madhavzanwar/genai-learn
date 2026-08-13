@@ -536,11 +536,9 @@ flowchart TD
 
 ## Screenshots
 
-> _Add screenshots here._ Recommended: homepage/course catalog, lesson player with AI tutor open, quiz in progress, and the results screen.
-
 | Homepage | Lesson Player | Quiz |
 |---|---|---|
-| _add screenshot_ | _add screenshot_ | _add screenshot_ |
+| ![Homepage](./public/homepage.png) | ![Lesson Player](./public/lesson-player.png) | ![Quiz](./public/quiz-active.png) |
 
 ---
 
@@ -565,7 +563,21 @@ Render's free tier spins down idle services. The first request after inactivity 
 - [ ] Video upload support for all lessons (beyond YouTube embeds)
 - [ ] Admin panel for course/lesson/quiz management
 - [ ] Completion certificates
+- [ ] Payment integration for premium courses
 
+---
+
+## Contributing
+
+Contributions are welcome.
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m "Add your feature"`
+4. Push to the branch: `git push origin feature/your-feature`
+5. Open a Pull Request
+
+Please open an issue first for major changes to discuss what you'd like to change.
 
 ---
 
