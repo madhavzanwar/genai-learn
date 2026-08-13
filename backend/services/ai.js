@@ -1,12 +1,14 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
+const DEFAULT_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+
 function getModel() {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY is not configured');
   }
   const genAI = new GoogleGenerativeAI(apiKey);
-  return genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  return genAI.getGenerativeModel({ model: DEFAULT_MODEL });
 }
 
 async function generateText(prompt) {

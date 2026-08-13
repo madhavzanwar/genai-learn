@@ -15,10 +15,16 @@ router.post('/explain', async (req, res) => {
     res.json({ explanation });
   } catch (error) {
     console.error('AI explain error:', error.message);
+    const isConfig = error.message === 'GEMINI_API_KEY is not configured';
+    const isModel =
+      error.message?.includes('404') ||
+      error.message?.includes('no longer available') ||
+      error.message?.includes('not found');
     res.status(503).json({
-      message:
-        error.message === 'GEMINI_API_KEY is not configured'
-          ? 'AI tutor is not configured yet. Add GEMINI_API_KEY to the backend.'
+      message: isConfig
+        ? 'AI tutor is not configured yet. Add GEMINI_API_KEY to Render.'
+        : isModel
+          ? 'AI model unavailable. Redeploy the latest backend code.'
           : 'AI tutor is temporarily unavailable. Please try again.',
     });
   }
