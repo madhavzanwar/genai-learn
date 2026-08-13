@@ -19,6 +19,8 @@ export type Lesson = {
   completed: boolean
   locked: boolean
   type: 'video' | 'quiz' | 'reading'
+  videoId?: string
+  description?: string
 }
 
 export type Module = {
@@ -128,11 +130,14 @@ export const courseModules: Module[] = [
     lessons: [
       {
         id: 'l1',
-        title: 'Course Introduction',
-        duration: '3 min',
-        completed: true,
+        title: 'What is Artificial Intelligence (AI)?',
+        duration: '14 min',
+        completed: false,
         locked: false,
         type: 'video',
+        videoId: 'E1-SHflLFVs',
+        description:
+          'Discover how Artificial Intelligence (AI) works and how it powers everyday tools like Google Maps, voice assistants, and recommendation engines. This introductory lesson breaks down key concepts into simple, easy-to-understand topics.\n\nKey Highlights:\n• Real-World Examples: See how AI operates behind the scenes in daily life.\n• Core Concepts: Learn what defines intelligence and how machines learn from data.\n• AI vs. Traditional Tech: Understand the difference between fixed programming, simple automation, and AI.\n• The Future of AI: Explore key industries being transformed and future career opportunities.',
       },
       {
         id: 'l2',

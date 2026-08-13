@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from typing import List, Dict
 import google.generativeai as genai
 import os
 
@@ -13,7 +14,8 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5000"],
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -30,7 +32,7 @@ class ExplainRequest(BaseModel):
 
 
 class HintBatchRequest(BaseModel):
-    wrong_answers: list[dict]
+    wrong_answers: List[Dict]
 
 
 @app.get("/")
