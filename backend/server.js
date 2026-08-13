@@ -11,16 +11,33 @@ const progressRoutes = require('./routes/progress');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://genai-learn.vercel.app',
+  'https://genai-learn-beta.vercel.app',
+  ...(process.env.FRONTEND_URL || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+];
+
 app.use(
   cors({
-    origin: [
-      'http://localhost:3000',
-      process.env.FRONTEND_URL || 'https://genai-learn.vercel.app',
-    ],
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     credentials: true,
   })
 );
 app.use(express.json());
+
+app.get('/api/health', (_req, res) => {
+  res.json({ status: 'ok', service: 'genai-learn-api' });
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/quiz', quizRoutes);

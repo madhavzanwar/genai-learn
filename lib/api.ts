@@ -1,4 +1,10 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+function getApiBase() {
+  const raw = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+  const trimmed = raw.replace(/\/$/, '')
+  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`
+}
+
+const BASE = getApiBase()
 
 export async function register(name: string, email: string, password: string) {
   const res = await fetch(`${BASE}/auth/register`, {
