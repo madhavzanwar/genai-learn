@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { LessonSidebar } from '@/components/lesson-sidebar'
 import { courses, courseModules } from '@/lib/data'
+import { explainConcept } from '@/lib/api'
 import { notFound } from 'next/navigation'
 
 function findLesson(lessonId: string) {
@@ -69,15 +70,14 @@ function CoursePageContent({
     setAiResponse(null)
 
     try {
-      const res = await fetch('http://localhost:8000/explain', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ concept: askInput.trim() }),
-      })
-      const data = await res.json()
-      setAiResponse(data.explanation ?? 'No response received.')
-    } catch {
-      setAiResponse('Unable to reach AI tutor. Make sure the AI service is running on port 8000.')
+      const data = await explainConcept(askInput.trim())
+      setAiResponse(data.explanation)
+    } catch (err) {
+      setAiResponse(
+        err instanceof Error
+          ? err.message
+          : 'AI tutor is unavailable. Please try again.'
+      )
     } finally {
       setAiLoading(false)
     }

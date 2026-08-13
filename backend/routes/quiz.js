@@ -2,20 +2,15 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const User = require('../models/User');
 const { quizQuestions, PASS_SCORE } = require('../data/questions');
+const { getHintsBatch } = require('../services/ai');
 
 const router = express.Router();
 
-async function getHintsFromPython(wrongAnswers) {
+async function getHintsFromAI(wrongAnswers) {
   try {
-    const response = await fetch('http://localhost:8000/hints/batch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ wrong_answers: wrongAnswers }),
-    });
-    const data = await response.json();
-    return data.hints || [];
+    return await getHintsBatch(wrongAnswers);
   } catch (err) {
-    console.error('Python AI service error:', err.message);
+    console.error('AI hints error:', err.message);
     return [];
   }
 }
@@ -69,7 +64,7 @@ router.post('/submit', auth, async (req, res) => {
 
     await user.save();
 
-    const hints = await getHintsFromPython(wrongAnswers);
+    const hints = await getHintsFromAI(wrongAnswers);
 
     res.json({
       score,

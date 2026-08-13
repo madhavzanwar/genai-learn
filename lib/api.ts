@@ -70,3 +70,15 @@ export async function getProgress(token: string) {
   if (!res.ok) throw new Error(data.message || 'Failed to fetch progress')
   return data as { unlockedLessons: string[] }
 }
+
+export async function explainConcept(concept: string) {
+  const res = await fetch(`${BASE}/ai/explain`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ concept }),
+  })
+
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.message || 'AI tutor unavailable')
+  return data as { explanation: string }
+}
