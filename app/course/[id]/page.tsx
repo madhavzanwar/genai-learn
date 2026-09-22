@@ -4,7 +4,7 @@ import { use, useState, Suspense, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Info, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { LessonSidebar } from '@/components/lesson-sidebar'
@@ -89,12 +89,13 @@ function CoursePageContent({
       <header className="sticky top-0 z-50 bg-card border-b border-border">
         <div className="h-14 px-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 min-w-0">
-            <Button variant="ghost" size="sm" asChild className="shrink-0 -ml-2">
-              <Link href="/">
-                <ArrowLeft data-icon="inline-start" />
-                Back
-              </Link>
-            </Button>
+            <Link 
+              href="/"
+              className={buttonVariants({ variant: 'ghost', size: 'sm', className: 'shrink-0 -ml-2' })}
+            >
+              <ArrowLeft data-icon="inline-start" />
+              Back
+            </Link>
             <Separator orientation="vertical" className="h-5" />
             <div className="min-w-0">
               <p className="text-[13px] font-semibold text-foreground truncate tracking-tight">
