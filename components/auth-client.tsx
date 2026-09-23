@@ -34,7 +34,10 @@ function FieldRow({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-[12px] font-medium text-foreground">
+      <label
+        htmlFor={id}
+        className="text-[11px] font-mono font-semibold uppercase tracking-wider text-stone-700"
+      >
         {label}
       </label>
       <div className="relative">
@@ -45,14 +48,17 @@ function FieldRow({
           autoComplete={autoComplete}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className={cn('h-10 text-[13px]', isPassword && 'pr-10')}
+          className={cn(
+            'h-10 text-[13px] rounded-xs border-[#E4E0D7] bg-white text-[#18181B] placeholder:text-stone-500 focus-visible:ring-1 focus-visible:ring-[#18181B] focus-visible:border-[#18181B] transition-all',
+            isPassword && 'pr-10'
+          )}
         />
         {isPassword && (
           <button
             type="button"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
             onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-600 hover:text-[#18181B] transition-colors cursor-pointer"
           >
             {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
@@ -112,32 +118,54 @@ export function AuthClient({ defaultTab }: { defaultTab: 'login' | 'register' })
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-16">
-      {/* Logo */}
-      <Link
-        href="/"
-        className="text-[15px] font-semibold tracking-tight text-foreground mb-10"
-      >
-        GenAI Learn
+    <div className="min-h-screen bg-[#F7F4EF] flex flex-col items-center justify-center px-4 py-16">
+      {/* Official Studio Brand Mark Header */}
+      <Link href="/" className="flex items-center gap-2.5 group mb-8">
+        <div className="w-8 h-8 rounded-xs bg-[#18181B] text-[#F7F4EF] flex items-center justify-center font-mono font-black text-sm tracking-tighter shadow-2xs group-hover:scale-105 transition-transform">
+          GL
+        </div>
+        <div className="flex flex-col text-left">
+          <span className="text-[13px] font-black tracking-widest uppercase text-[#18181B] leading-none">
+            GenAI Learn
+          </span>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-stone-600 leading-none mt-1">
+            Learning Studio
+          </span>
+        </div>
       </Link>
 
-      {/* Card */}
-      <div className="w-full max-w-[400px] bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+      {/* Elevated Studio Editorial Container */}
+      <div className="w-full max-w-[420px] bg-white border border-[#E4E0D7] rounded-sm shadow-[4px_4px_0px_0px_#18181B] p-6 sm:p-8">
         <Tabs defaultValue={defaultTab} className="w-full">
-          <div className="px-6 pt-6">
-            <TabsList className="w-full grid grid-cols-2">
-              <TabsTrigger value="login">Log In</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
+          <div>
+            <TabsList className="w-full grid grid-cols-2 p-1 bg-[#EFECE6] rounded-xs border border-[#E4E0D7] h-9">
+              <TabsTrigger
+                value="login"
+                className="rounded-xs text-xs font-mono uppercase tracking-wider font-semibold data-active:bg-white data-active:text-[#18181B] data-active:shadow-2xs text-stone-600 transition-all cursor-pointer"
+              >
+                Log In
+              </TabsTrigger>
+              <TabsTrigger
+                value="register"
+                className="rounded-xs text-xs font-mono uppercase tracking-wider font-semibold data-active:bg-white data-active:text-[#18181B] data-active:shadow-2xs text-stone-600 transition-all cursor-pointer"
+              >
+                Register
+              </TabsTrigger>
             </TabsList>
           </div>
 
-          {/* Login */}
-          <TabsContent value="login" className="px-6 pb-6 pt-5 flex flex-col gap-5">
+          {/* Login Form */}
+          <TabsContent value="login" className="pt-6 flex flex-col gap-5">
             <div className="flex flex-col gap-1">
-              <h1 className="text-[18px] font-semibold text-foreground tracking-tight">
+              <div className="inline-flex items-center gap-2 mb-1">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded-xs bg-[#F7F4EF] text-stone-700 border border-[#E4E0D7]">
+                  STUDIO ACCESS
+                </span>
+              </div>
+              <h1 className="text-xl font-bold text-[#18181B] tracking-tight">
                 Welcome back
               </h1>
-              <p className="text-[13px] text-muted-foreground">
+              <p className="text-xs text-stone-600 font-mono">
                 Sign in to continue your learning journey.
               </p>
             </div>
@@ -164,41 +192,57 @@ export function AuthClient({ defaultTab }: { defaultTab: 'login' | 'register' })
               <div className="flex justify-end">
                 <Link
                   href="#"
-                  className="text-[12px] text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-[11px] font-mono text-stone-600 hover:text-[#18181B] transition-colors"
                 >
                   Forgot password?
                 </Link>
               </div>
               {error && (
-                <p className="text-[12px] text-[#DC2626]">{error}</p>
+                <div className="text-xs font-mono text-[#DC2626] bg-red-50 border border-red-200 rounded-xs px-3 py-2">
+                  {error}
+                </div>
               )}
-              <Button type="submit" className="w-full h-10" disabled={loading}>
-                Log In
+              <Button
+                type="submit"
+                className="w-full h-10 bg-[#18181B] hover:bg-stone-800 text-[#F7F4EF] rounded-xs font-mono uppercase tracking-wider font-bold shadow-2xs transition-all active:scale-[0.99] cursor-pointer"
+                disabled={loading}
+              >
+                {loading ? 'Authenticating...' : 'Log In'}
               </Button>
             </form>
 
-            <div className="flex items-center gap-3">
-              <Separator className="flex-1" />
-              <span className="text-[11px] text-muted-foreground font-medium">OR</span>
-              <Separator className="flex-1" />
+            <div className="flex items-center gap-3 my-1">
+              <Separator className="flex-1 bg-[#E4E0D7]" />
+              <span className="text-[10px] text-stone-600 font-mono uppercase tracking-widest font-semibold">
+                OR
+              </span>
+              <Separator className="flex-1 bg-[#E4E0D7]" />
             </div>
 
-            <p className="text-[12px] text-center text-muted-foreground">
+            <p className="text-xs text-center text-stone-600 font-mono">
               Don&apos;t have an account?{' '}
-              <Link href="/auth?tab=register" className="text-foreground font-medium hover:underline underline-offset-2">
+              <Link
+                href="/auth?tab=register"
+                className="text-[#18181B] font-bold underline underline-offset-2 hover:text-stone-700"
+              >
                 Create one free
               </Link>
             </p>
           </TabsContent>
 
-          {/* Register */}
-          <TabsContent value="register" className="px-6 pb-6 pt-5 flex flex-col gap-5">
+          {/* Register Form */}
+          <TabsContent value="register" className="pt-6 flex flex-col gap-5">
             <div className="flex flex-col gap-1">
-              <h1 className="text-[18px] font-semibold text-foreground tracking-tight">
+              <div className="inline-flex items-center gap-2 mb-1">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded-xs bg-[#F7F4EF] text-stone-700 border border-[#E4E0D7]">
+                  STUDENT ONBOARDING
+                </span>
+              </div>
+              <h1 className="text-xl font-bold text-[#18181B] tracking-tight">
                 Create your account
               </h1>
-              <p className="text-[13px] text-muted-foreground">
-                Free access to foundational AI courses.
+              <p className="text-xs text-stone-600 font-mono">
+                Free full access to foundational AI courses.
               </p>
             </div>
 
@@ -240,40 +284,55 @@ export function AuthClient({ defaultTab }: { defaultTab: 'login' | 'register' })
                 onChange={setRegisterPassword}
               />
               {error && (
-                <p className="text-[12px] text-[#DC2626]">{error}</p>
+                <div className="text-xs font-mono text-[#DC2626] bg-red-50 border border-red-200 rounded-xs px-3 py-2">
+                  {error}
+                </div>
               )}
-              <Button type="submit" className="w-full h-10" disabled={loading}>
-                Create Account
+              <Button
+                type="submit"
+                className="w-full h-10 bg-[#18181B] hover:bg-stone-800 text-[#F7F4EF] rounded-xs font-mono uppercase tracking-wider font-bold shadow-2xs transition-all active:scale-[0.99] cursor-pointer"
+                disabled={loading}
+              >
+                {loading ? 'Creating Account...' : 'Create Account'}
               </Button>
             </form>
 
-            <p className="text-[11px] text-center text-muted-foreground leading-relaxed">
+            <p className="text-[11px] text-center text-stone-600 leading-relaxed font-mono">
               By registering, you agree to our{' '}
-              <Link href="#" className="text-foreground hover:underline underline-offset-2">
+              <Link href="#" className="text-[#18181B] underline underline-offset-2 hover:text-stone-700">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="#" className="text-foreground hover:underline underline-offset-2">
+              <Link href="#" className="text-[#18181B] underline underline-offset-2 hover:text-stone-700">
                 Privacy Policy
               </Link>
               .
             </p>
 
-            <div className="flex items-center gap-3">
-              <Separator className="flex-1" />
-              <span className="text-[11px] text-muted-foreground font-medium">OR</span>
-              <Separator className="flex-1" />
+            <div className="flex items-center gap-3 my-1">
+              <Separator className="flex-1 bg-[#E4E0D7]" />
+              <span className="text-[10px] text-stone-600 font-mono uppercase tracking-widest font-semibold">
+                OR
+              </span>
+              <Separator className="flex-1 bg-[#E4E0D7]" />
             </div>
 
-            <p className="text-[12px] text-center text-muted-foreground">
+            <p className="text-xs text-center text-stone-600 font-mono">
               Already have an account?{' '}
-              <Link href="/auth" className="text-foreground font-medium hover:underline underline-offset-2">
+              <Link
+                href="/auth"
+                className="text-[#18181B] font-bold underline underline-offset-2 hover:text-stone-700"
+              >
                 Log in
               </Link>
             </p>
           </TabsContent>
         </Tabs>
       </div>
+
+      <p className="mt-8 text-xs font-mono text-stone-600 text-center">
+        GenAI Learn Learning Studio &bull; Editorial Learning System
+      </p>
     </div>
   )
 }

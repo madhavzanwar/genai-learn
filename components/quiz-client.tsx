@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { RotateCcw, Lightbulb } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -38,50 +38,53 @@ export function QuizClient({
   const isLast = currentIndex === totalQuestions - 1
   const progressWidth = ((currentIndex + 1) / totalQuestions) * 100
 
-  const finishQuiz = async (updated: (number | null)[]) => {
-    setAnswers(updated)
+  const finishQuiz = useCallback(
+    async (updated: (number | null)[]) => {
+      setAnswers(updated)
 
-    const answerValues = updated.map((a) => a ?? -1)
-    const token =
-      typeof window !== 'undefined' ? localStorage.getItem('genai_token') : null
+      const answerValues = updated.map((a) => a ?? -1)
+      const token =
+        typeof window !== 'undefined' ? localStorage.getItem('genai_token') : null
 
-    if (token) {
-      try {
-        setIsSubmitting(true)
-        const result = await submitQuiz(courseId, answerValues, token, lessonId)
-        setScore(result.score)
-        setPassed(result.passed)
-        setHints(result.hints ?? [])
-        if (result.passed && nextLessonId) {
-          unlockLesson(nextLessonId)
+      if (token) {
+        try {
+          setIsSubmitting(true)
+          const result = await submitQuiz(courseId, answerValues, token, lessonId)
+          setScore(result.score)
+          setPassed(result.passed)
+          setHints(result.hints ?? [])
+          if (result.passed && nextLessonId) {
+            unlockLesson(nextLessonId)
+          }
+          localStorage.setItem(
+            'unlockedLessons',
+            JSON.stringify(result.unlockedLessons)
+          )
+          setQuizFinished(true)
+          return
+        } catch {
+          // Fall back to client-side scoring if API fails
+        } finally {
+          setIsSubmitting(false)
         }
-        localStorage.setItem(
-          'unlockedLessons',
-          JSON.stringify(result.unlockedLessons)
-        )
-        setQuizFinished(true)
-        return
-      } catch {
-        // Fall back to client-side scoring if API fails
-      } finally {
-        setIsSubmitting(false)
       }
-    }
 
-    const finalScore = updated.filter(
-      (ans, i) => ans === questions[i]?.answer
-    ).length
-    const isPassed = finalScore >= PASS_SCORE
-    setScore(finalScore)
-    setPassed(isPassed)
-    if (isPassed && nextLessonId) {
-      unlockLesson(nextLessonId)
-    }
-    setHints([])
-    setQuizFinished(true)
-  }
+      const finalScore = updated.filter(
+        (ans, i) => ans === questions[i]?.answer
+      ).length
+      const isPassed = finalScore >= PASS_SCORE
+      setScore(finalScore)
+      setPassed(isPassed)
+      if (isPassed && nextLessonId) {
+        unlockLesson(nextLessonId)
+      }
+      setHints([])
+      setQuizFinished(true)
+    },
+    [courseId, lessonId, nextLessonId, questions]
+  )
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (selectedAnswer === null || isSubmitting) return
 
     const updated = [...answers]
@@ -94,9 +97,9 @@ export function QuizClient({
       setCurrentIndex((i) => i + 1)
       setSelectedAnswer(null)
     }
-  }
+  }, [selectedAnswer, isSubmitting, answers, currentIndex, isLast, finishQuiz])
 
-  const handleRetake = () => {
+  const handleRetake = useCallback(() => {
     setCurrentIndex(0)
     setSelectedAnswer(null)
     setAnswers(Array(totalQuestions).fill(null))
@@ -104,113 +107,261 @@ export function QuizClient({
     setScore(0)
     setPassed(false)
     setHints([])
-  }
+  }, [totalQuestions])
 
-  const handleUnlockNextLesson = () => {
+  const handleUnlockNextLesson = useCallback(() => {
     if (nextLessonId) {
       unlockLesson(nextLessonId)
       router.push(`/course/${courseId}?lesson=${nextLessonId}`)
     } else {
       router.push(`/course/${courseId}?lesson=${lessonId}`)
     }
-  }
+  }, [courseId, lessonId, nextLessonId, router])
 
+  // Keyboard shortcut listener for 1, 2, 3, 4 / A, B, C, D and Enter
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) {
+        return
+      }
+
+      if (quizFinished) {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          if (passed) {
+            handleUnlockNextLesson()
+          } else {
+            handleRetake()
+          }
+        }
+        return
+      }
+
+      const key = e.key.toUpperCase()
+      let optionIdx: number | null = null
+
+      if (key === '1' || key === 'A') optionIdx = 0
+      else if (key === '2' || key === 'B') optionIdx = 1
+      else if (key === '3' || key === 'C') optionIdx = 2
+      else if (key === '4' || key === 'D') optionIdx = 3
+
+      if (optionIdx !== null && question && optionIdx < question.options.length) {
+        e.preventDefault()
+        setSelectedAnswer(optionIdx)
+        return
+      }
+
+      if (e.key === 'Enter') {
+        if (selectedAnswer !== null && !isSubmitting) {
+          e.preventDefault()
+          handleNext()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [
+    quizFinished,
+    passed,
+    question,
+    selectedAnswer,
+    isSubmitting,
+    handleNext,
+    handleRetake,
+    handleUnlockNextLesson,
+  ])
+
+  // Results Screen
   if (quizFinished) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-lg flex flex-col items-center gap-6 text-center">
-          <span className="text-[48px] font-semibold text-foreground tracking-tight leading-none">
-            {score}/{totalQuestions}
-          </span>
-
-          <div
-            className={cn(
-              'inline-flex items-center px-3 py-1 rounded-full text-[12px] font-semibold',
-              passed
-                ? 'bg-[#F0FDF4] text-[#16A34A]'
-                : 'bg-[#FEF2F2] text-[#DC2626]'
-            )}
-          >
-            {passed ? 'Passed' : 'Try Again'}
+      <div className="w-full max-w-[620px] mx-auto px-4 flex justify-center">
+        <div className="w-full border border-[#E4E0D7] rounded-sm bg-white p-6 sm:p-10 shadow-[4px_4px_0px_0px_#18181B] flex flex-col items-center gap-6 text-center">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xs bg-[#F7F4EF] border border-[#E4E0D7] text-xs font-mono font-bold uppercase tracking-widest text-stone-700">
+            STUDIO QUIZ SCORECARD
           </div>
 
-          <p className="text-[14px] text-muted-foreground leading-relaxed max-w-sm">
-            {passed
-              ? nextLessonId
-                ? 'Great job! You can now unlock the next lesson.'
-                : 'Congratulations! You have completed all lessons and quizzes in this course.'
-              : 'You need 7/10 to unlock the next lesson. Review the material and try again.'}
-          </p>
+          {/* Big Bold Score */}
+          <div className="flex items-baseline justify-center gap-2">
+            <span className="font-mono text-6xl sm:text-7xl font-black text-[#18181B] tracking-tight leading-none">
+              {score}
+            </span>
+            <span className="font-mono text-2xl sm:text-3xl font-bold text-stone-400">
+              / {totalQuestions}
+            </span>
+          </div>
 
-          {score < totalQuestions && hints.length > 0 && (
-            <div className="w-full flex flex-col gap-3 text-left">
-              <p className="text-[13px] font-semibold text-foreground tracking-tight">
-                Review your wrong answers
-              </p>
-              {hints.map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-3 bg-white border border-[#E7E5E0] rounded-lg p-3"
-                >
-                  <Lightbulb className="size-4 shrink-0 text-muted-foreground mt-0.5" />
-                  <div className="flex flex-col gap-1 min-w-0">
-                    <p className="text-[12px] text-muted-foreground leading-snug">
-                      {item.question}
-                    </p>
-                    <p className="text-[13px] text-foreground leading-relaxed">
-                      {item.hint}
-                    </p>
-                  </div>
+          {/* Pass / Retake Badge */}
+          <div
+            className={cn(
+              'inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xs text-xs font-mono font-bold uppercase tracking-wider border',
+              passed
+                ? 'bg-emerald-100/70 text-emerald-800 border-emerald-300'
+                : 'bg-red-50 text-red-700 border-red-200'
+            )}
+          >
+            {passed ? '✓ PASSED (BENCHMARK MET)' : '✕ RETAKE REQUIRED (< 70%)'}
+          </div>
+
+          {/* Celebratory Card if Passed */}
+          {passed ? (
+            <div className="w-full bg-[#F7F4EF] border border-[#E4E0D7] rounded-xs p-5 text-left flex flex-col gap-3 relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest px-2.5 py-1 rounded-xs bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  ★ MILESTONE VERIFIED
+                </span>
+                <span className="text-[11px] font-mono text-stone-600 uppercase tracking-wider font-semibold">
+                  Assessment Complete
+                </span>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-[#18181B]">
+                  {nextLessonId
+                    ? 'Lesson Completed & Next Module Unlocked'
+                    : 'Full Course Milestone Completed!'}
+                </h3>
+                <p className="text-xs text-stone-600 font-mono mt-1 leading-relaxed">
+                  {nextLessonId
+                    ? 'Great job! Your understanding has been verified. You can now advance to the next lesson.'
+                    : 'Congratulations! You have successfully mastered all lessons and quizzes in this course.'}
+                </p>
+              </div>
+              {nextLessonId && (
+                <div className="pt-2 border-t border-[#E4E0D7] flex items-center justify-between text-[11px] font-mono text-stone-700">
+                  <span className="uppercase tracking-wider font-semibold">Unlocked Lesson:</span>
+                  <span className="font-bold text-[#18181B] bg-white px-2 py-0.5 rounded-xs border border-[#E4E0D7]">
+                    {nextLessonId.toUpperCase()}
+                  </span>
                 </div>
-              ))}
+              )}
+            </div>
+          ) : (
+            <div className="w-full bg-stone-50 border border-[#E4E0D7] rounded-xs p-4 text-left flex flex-col gap-1.5">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-stone-600">
+                CRITERIA NOTICE
+              </span>
+              <p className="text-xs text-stone-700 leading-relaxed">
+                A minimum score of <strong>{PASS_SCORE}/{totalQuestions} ({Math.round((PASS_SCORE / totalQuestions) * 100)}%)</strong> is required to verify competency and unlock the next lesson.
+              </p>
             </div>
           )}
 
-          {passed ? (
-            <Button size="lg" onClick={handleUnlockNextLesson}>
-              {nextLessonId ? 'Unlock Next Lesson' : 'Complete Course'}
-            </Button>
-          ) : (
-            <Button size="lg" onClick={handleRetake}>
-              <RotateCcw data-icon="inline-start" />
-              Retake Quiz
-            </Button>
+          {/* Wrong Answer Hints Review */}
+          {score < totalQuestions && hints.length > 0 && (
+            <div className="w-full flex flex-col gap-3 text-left">
+              <p className="text-xs font-mono uppercase tracking-wider font-bold text-stone-700">
+                Review Topics ({hints.length})
+              </p>
+              <div className="flex flex-col gap-2.5 max-h-60 overflow-y-auto pr-1">
+                {hints.map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-3 bg-[#F7F4EF] border border-[#E4E0D7] rounded-xs p-3 text-xs"
+                  >
+                    <Lightbulb className="size-4 shrink-0 text-amber-600 mt-0.5" />
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <p className="font-semibold text-[#18181B] leading-snug">
+                        {item.question}
+                      </p>
+                      <p className="text-stone-600 font-mono text-[11px] leading-relaxed">
+                        💡 {item.hint}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
+
+          {/* Action Buttons */}
+          <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            {passed ? (
+              <Button
+                size="lg"
+                onClick={handleUnlockNextLesson}
+                className="w-full sm:w-auto h-11 px-8 rounded-xs bg-[#18181B] hover:bg-stone-800 text-[#F7F4EF] font-mono text-xs uppercase tracking-wider font-bold shadow-2xs transition-all active:scale-[0.99] cursor-pointer"
+              >
+                {nextLessonId ? 'Continue to Next Lesson ↵' : 'Complete Course & Return to Hub ↵'}
+              </Button>
+            ) : (
+              <>
+                <Button
+                  size="lg"
+                  onClick={handleRetake}
+                  className="w-full sm:w-auto h-11 px-6 rounded-xs bg-[#18181B] hover:bg-stone-800 text-[#F7F4EF] font-mono text-xs uppercase tracking-wider font-bold shadow-2xs transition-all active:scale-[0.99] cursor-pointer"
+                >
+                  <RotateCcw data-icon="inline-start" className="size-4 mr-2" />
+                  Retake Quiz ↵
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => router.push(`/course/${courseId}?lesson=${lessonId}`)}
+                  className="w-full sm:w-auto h-11 px-6 rounded-xs border-[#E4E0D7] bg-white hover:bg-stone-100 text-[#18181B] font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer"
+                >
+                  Review Lesson
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     )
   }
 
+  // Active Quiz Question
+  const questionNum = String(currentIndex + 1).padStart(2, '0')
+  const totalNum = String(totalQuestions).padStart(2, '0')
+
   return (
-    <div className="min-h-screen bg-background flex items-start justify-center px-4 pt-10 pb-16">
-      <div className="w-full max-w-[640px] flex flex-col gap-8">
-        {/* Progress bar */}
-        <div className="h-[3px] w-full bg-[#E7E5E0] rounded-full overflow-hidden">
+    <div className="w-full max-w-[680px] mx-auto px-4 flex flex-col gap-6">
+      {/* Accessible Progress Bar */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between text-xs font-mono">
+          <span className="text-stone-600 font-bold uppercase tracking-wider">
+            Quiz Progress
+          </span>
+          <span className="text-[#18181B] font-bold">
+            {Math.round(progressWidth)}%
+          </span>
+        </div>
+        <div
+          role="progressbar"
+          aria-valuenow={currentIndex + 1}
+          aria-valuemin={1}
+          aria-valuemax={totalQuestions}
+          aria-label={`Question ${currentIndex + 1} of ${totalQuestions}`}
+          className="h-2 w-full bg-[#EFECE6] rounded-xs border border-[#E4E0D7] overflow-hidden"
+        >
           <div
-            className="h-full bg-[#1C1C1A] rounded-full transition-all duration-300"
+            className="h-full bg-[#18181B] transition-all duration-300 ease-out"
             style={{ width: `${progressWidth}%` }}
           />
         </div>
+      </div>
 
-        {/* Question header */}
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-[13px] text-muted-foreground">
-            Question {currentIndex + 1} of {totalQuestions}
-          </span>
+      {/* Studio Question Container Card */}
+      <div className="border border-[#E4E0D7] rounded-sm bg-white p-6 sm:p-8 shadow-[4px_4px_0px_0px_#18181B] flex flex-col gap-6">
+        {/* Question Header */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xs bg-[#F7F4EF] border border-[#E4E0D7] text-xs font-mono font-bold uppercase tracking-wider text-[#18181B]">
+            <span>QUESTION {questionNum} / {totalNum}</span>
+          </div>
           <span
             className={cn(
-              'text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize',
+              'text-[10px] font-mono font-bold uppercase tracking-widest px-2.5 py-1 rounded-xs border',
               question.difficulty === 'easy'
-                ? 'bg-[#F0FDF4] text-[#16A34A]'
-                : 'bg-[#F5F4F0] text-[#6B7280]'
+                ? 'bg-emerald-100/70 text-emerald-800 border-emerald-300'
+                : 'bg-stone-100 text-stone-700 border-[#E4E0D7]'
             )}
           >
-            {question.difficulty === 'easy' ? 'Easy' : 'Hard'}
+            {question.difficulty === 'easy' ? 'EASY' : 'HARD'}
           </span>
         </div>
 
-        {/* Question */}
-        <h2 className="text-[20px] font-medium text-foreground leading-snug tracking-tight">
+        {/* Question Statement */}
+        <h2 className="text-xl sm:text-2xl font-bold text-[#18181B] leading-snug tracking-tight">
           {question.question}
         </h2>
 
@@ -218,6 +369,7 @@ export function QuizClient({
         <div className="flex flex-col gap-3">
           {question.options.map((option, idx) => {
             const isSelected = selectedAnswer === idx
+            const letter = ['A', 'B', 'C', 'D'][idx] || String(idx + 1)
 
             return (
               <button
@@ -225,37 +377,70 @@ export function QuizClient({
                 type="button"
                 onClick={() => setSelectedAnswer(idx)}
                 className={cn(
-                  'w-full text-left rounded-xl border px-5 py-4 transition-all duration-150',
-                  'text-[14px] leading-relaxed text-foreground bg-white',
+                  'group w-full text-left rounded-xs border px-4 py-3.5 sm:px-5 sm:py-4 transition-all duration-150 flex items-center justify-between gap-3 cursor-pointer',
                   isSelected
-                    ? 'border-[#1C1C1A] bg-[#FAFAF9]'
-                    : 'border-[#E7E5E0] hover:border-[#1C1C1A]'
+                    ? 'border-[#18181B] bg-[#F7F4EF] shadow-2xs ring-1 ring-[#18181B]'
+                    : 'border-[#E4E0D7] bg-white hover:border-stone-400 hover:bg-stone-50/50'
                 )}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3.5 min-w-0">
                   <span
                     className={cn(
-                      'size-5 rounded-full border shrink-0 transition-colors',
+                      'font-mono text-xs font-bold border rounded-xs px-2 py-1 transition-colors shrink-0',
                       isSelected
-                        ? 'border-[#1C1C1A] bg-[#1C1C1A]'
-                        : 'border-[#E7E5E0] bg-white'
+                        ? 'bg-[#18181B] text-[#F7F4EF] border-[#18181B]'
+                        : 'bg-[#F7F4EF] text-stone-700 border-[#E4E0D7] group-hover:border-stone-400'
                     )}
-                  />
-                  {option}
+                  >
+                    {letter}
+                  </span>
+                  <span className="text-sm font-medium text-[#18181B] leading-relaxed">
+                    {option}
+                  </span>
+                </div>
+                <div
+                  className={cn(
+                    'size-4 rounded-xs border shrink-0 flex items-center justify-center transition-colors',
+                    isSelected
+                      ? 'border-[#18181B] bg-[#18181B] text-white'
+                      : 'border-[#E4E0D7] bg-white group-hover:border-stone-400'
+                  )}
+                >
+                  {isSelected && (
+                    <div className="w-1.5 h-1.5 bg-[#F7F4EF] rounded-[0.5px]" />
+                  )}
                 </div>
               </button>
             )
           })}
         </div>
 
-        {/* Next / Submit */}
-        <div className="flex justify-end pt-2">
+        {/* Card Footer with Tips & Action Button */}
+        <div className="pt-2 border-t border-[#E4E0D7] flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-[11px] font-mono text-stone-500 hidden sm:flex items-center gap-1.5">
+            <span>Press</span>
+            <kbd className="px-1.5 py-0.5 bg-[#EFECE6] border border-[#E4E0D7] rounded-xs font-bold text-stone-700">1</kbd>
+            <span>-</span>
+            <kbd className="px-1.5 py-0.5 bg-[#EFECE6] border border-[#E4E0D7] rounded-xs font-bold text-stone-700">4</kbd>
+            <span>or</span>
+            <kbd className="px-1.5 py-0.5 bg-[#EFECE6] border border-[#E4E0D7] rounded-xs font-bold text-stone-700">A</kbd>
+            <span>-</span>
+            <kbd className="px-1.5 py-0.5 bg-[#EFECE6] border border-[#E4E0D7] rounded-xs font-bold text-stone-700">D</kbd>
+            <span>to pick,</span>
+            <kbd className="px-1.5 py-0.5 bg-[#EFECE6] border border-[#E4E0D7] rounded-xs font-bold text-stone-700">Enter ↵</kbd>
+            <span>to advance</span>
+          </div>
+
           <Button
             onClick={handleNext}
             disabled={selectedAnswer === null || isSubmitting}
-            size="lg"
+            className="w-full sm:w-auto h-10 px-6 rounded-xs bg-[#18181B] hover:bg-stone-800 text-[#F7F4EF] font-mono text-xs uppercase tracking-wider font-bold shadow-2xs transition-all active:scale-[0.99] cursor-pointer disabled:cursor-not-allowed"
           >
-            {isLast ? 'Submit Quiz' : 'Next Question'}
+            {isSubmitting
+              ? 'Verifying...'
+              : isLast
+              ? 'Submit Quiz ↵'
+              : 'Next Question ↵'}
           </Button>
         </div>
       </div>

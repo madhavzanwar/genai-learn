@@ -16,13 +16,27 @@ function LessonIcon({ lesson }: { lesson: Lesson }) {
   return <PlayCircle className="size-4 shrink-0 text-foreground" />
 }
 
-export function LessonSidebar({ courseId, activeLessonId }: { courseId: string; activeLessonId: string }) {
+export interface LessonSidebarProps {
+  courseId: string
+  activeLessonId: string
+  onSelectLesson?: () => void
+  className?: string
+  courseTitle?: string
+}
+
+export function LessonSidebar({
+  courseId,
+  activeLessonId,
+  onSelectLesson,
+  className,
+  courseTitle = 'Introduction to Generative AI',
+}: LessonSidebarProps) {
   const [expanded, setExpanded] = useState<string[]>(['module-1', 'module-2'])
   const [unlockedLessons, setUnlockedLessons] = useState<string[]>([])
 
   useEffect(() => {
     setUnlockedLessons(getUnlockedLessons())
-  }, [])
+  }, [activeLessonId])
 
   const isLessonLocked = (lesson: Lesson) =>
     lesson.locked && !unlockedLessons.includes(lesson.id)
@@ -31,10 +45,10 @@ export function LessonSidebar({ courseId, activeLessonId }: { courseId: string; 
     setExpanded((prev) => (prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]))
 
   return (
-    <aside className="bg-card border border-border rounded-xl overflow-hidden flex flex-col">
+    <aside className={cn('bg-card border border-border rounded-xl overflow-hidden flex flex-col', className)}>
       <div className="px-5 py-4 border-b border-border">
         <h2 className="text-[13px] font-semibold text-foreground tracking-tight">Course Content</h2>
-        <p className="text-[12px] text-muted-foreground mt-0.5">Introduction to Generative AI</p>
+        <p className="text-[12px] text-muted-foreground mt-0.5">{courseTitle}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -74,6 +88,13 @@ export function LessonSidebar({ courseId, activeLessonId }: { courseId: string; 
                       <li key={lesson.id}>
                         <Link
                           href={locked ? '#' : `/course/${courseId}?lesson=${lesson.id}`}
+                          onClick={(e) => {
+                            if (locked) {
+                              e.preventDefault()
+                            } else if (onSelectLesson) {
+                              onSelectLesson()
+                            }
+                          }}
                           className={cn(
                             'flex items-center gap-3 px-5 py-2.5 transition-colors',
                             isActive
