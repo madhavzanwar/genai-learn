@@ -85,15 +85,20 @@ export function AuthClient({ defaultTab }: { defaultTab: 'login' | 'register' })
     setLoading(true)
 
     try {
-      const data = await login(loginEmail, loginPassword)
+      if (!loginEmail.trim() || !loginPassword) {
+        setError('Please enter both your email address and password.')
+        return
+      }
+      const data = await login(loginEmail.trim(), loginPassword)
       localStorage.setItem('genai_token', data.token)
       localStorage.setItem('genai_user', data.name)
       if (data.unlockedLessons) {
         localStorage.setItem('unlockedLessons', JSON.stringify(data.unlockedLessons))
       }
       router.push('/')
+      router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError(err instanceof Error ? err.message : 'Login failed. Please verify your credentials.')
     } finally {
       setLoading(false)
     }
@@ -106,12 +111,21 @@ export function AuthClient({ defaultTab }: { defaultTab: 'login' | 'register' })
 
     try {
       const name = `${firstName} ${lastName}`.trim()
-      const data = await register(name, registerEmail, registerPassword)
+      if (!name) {
+        setError('Please provide your first and last name.')
+        return
+      }
+      if (!registerEmail.trim() || !registerPassword) {
+        setError('Email address and password are required.')
+        return
+      }
+      const data = await register(name, registerEmail.trim(), registerPassword)
       localStorage.setItem('genai_token', data.token)
       localStorage.setItem('genai_user', data.name)
       router.push('/')
+      router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed')
+      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.')
     } finally {
       setLoading(false)
     }
