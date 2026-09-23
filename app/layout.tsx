@@ -15,10 +15,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'GenAI Learn — Learn AI. Simply.',
+  title: 'EKLAVYA — LEARN AI SIMPLY: BASICS TO BEYOND',
   description:
-    'A clean, focused learning platform for AI courses. Master generative AI, prompt engineering, and LLM applications at your own pace.',
-  generator: 'v0.app',
+    'EKLAVYA: Learn AI simply from basics to beyond. Master generative AI, prompt engineering, and data science essentials at your own pace.',
 }
 
 export const viewport: Viewport = {

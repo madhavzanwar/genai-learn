@@ -10,6 +10,8 @@ export type Course = {
   locked: boolean
   thumbnail: string
   category: string
+  externalUrl?: string
+  isExternal?: boolean
 }
 
 export type Lesson = {
@@ -42,7 +44,7 @@ export const courses: Course[] = [
     title: 'Introduction to Generative AI',
     description:
       'Learn the fundamentals of generative AI, how large language models work, and their real-world applications.',
-    instructor: 'DS Virtual Lab',
+    instructor: 'Eklavya',
     rating: 4.8,
     students: 12430,
     modules: 2,
@@ -56,7 +58,7 @@ export const courses: Course[] = [
     title: 'Prompt Engineering Fundamentals',
     description:
       'Master the art of crafting effective prompts for ChatGPT, Claude, and other leading language models.',
-    instructor: 'DS Virtual Lab',
+    instructor: 'Eklavya',
     rating: 4.7,
     students: 9812,
     modules: 5,
@@ -66,60 +68,20 @@ export const courses: Course[] = [
     category: 'Foundations',
   },
   {
-    id: 'building-ai-agents',
-    title: 'Building AI Agents from Scratch',
+    id: 'data-science',
+    title: 'Data Science',
     description:
-      'Design and implement autonomous AI agents using tool-calling, memory, and multi-step reasoning loops.',
-    instructor: 'DS Virtual Lab',
+      'An introductory overview to Data Science, Python, and Machine Learning essentials.',
+    instructor: 'Eklavya',
     rating: 4.9,
-    students: 7205,
-    modules: 6,
-    duration: '5h 50m',
-    locked: true,
-    thumbnail: '',
-    category: 'Advanced',
-  },
-  {
-    id: 'fine-tuning-llms',
-    title: 'Fine-Tuning Large Language Models',
-    description:
-      'Learn how to fine-tune pre-trained LLMs on custom datasets using LoRA, QLoRA, and PEFT techniques.',
-    instructor: 'DS Virtual Lab',
-    rating: 4.6,
-    students: 5634,
-    modules: 5,
-    duration: '6h 30m',
-    locked: true,
-    thumbnail: '',
-    category: 'Advanced',
-  },
-  {
-    id: 'ai-for-data-analysis',
-    title: 'AI for Data Analysis',
-    description:
-      'Use AI tools to automate exploratory data analysis, generate insights, and build data-driven reports.',
-    instructor: 'DS Virtual Lab',
-    rating: 4.8,
-    students: 8901,
+    students: 11450,
     modules: 4,
-    duration: '3h 45m',
-    locked: true,
+    duration: '3h 30m',
+    locked: false,
     thumbnail: '',
-    category: 'Applied',
-  },
-  {
-    id: 'langchain-applications',
-    title: 'LLM Applications with LangChain',
-    description:
-      'Build production-ready LLM-powered applications using LangChain, RAG pipelines, and vector databases.',
-    instructor: 'DS Virtual Lab',
-    rating: 4.7,
-    students: 6118,
-    modules: 7,
-    duration: '7h 15m',
-    locked: true,
-    thumbnail: '',
-    category: 'Applied',
+    category: 'Data Science',
+    externalUrl: 'https://your-datascience-platform.com',
+    isExternal: true,
   },
 ]
 

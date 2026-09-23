@@ -19,7 +19,7 @@ async function generateText(prompt) {
 
 async function explainConcept(concept) {
   const prompt = `
-You are a friendly AI tutor teaching a beginner AI/ML course called GenAI Learn.
+You are a friendly AI tutor teaching a beginner AI/ML course called Eklavya.
 
 A student wants to understand: "${concept}"
 

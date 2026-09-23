@@ -19,8 +19,8 @@ export async function generateMetadata({
   const course = courses.find((c) => c.id === id)
   const quiz = getQuizForLesson(lessonId)
   return {
-    title: `${quiz.title} — Quiz | GenAI Learn Studio`,
-    description: `Assessment for ${course?.title || 'GenAI Course'}. Test your knowledge and verify key milestones.`,
+    title: `${quiz.title} — Quiz | EKLAVYA Studio`,
+    description: `Assessment for ${course?.title || 'Course'}. Test your knowledge and verify key milestones.`,
   }
 }
 
@@ -58,7 +58,7 @@ export default async function QuizPage({
 
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-7 h-7 rounded-xs bg-[#18181B] text-[#F7F4EF] flex items-center justify-center font-mono font-black text-xs shrink-0">
-                GL
+                EK
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-[13px] font-bold text-[#18181B] tracking-tight truncate leading-none">

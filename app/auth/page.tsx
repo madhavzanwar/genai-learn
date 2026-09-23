@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { AuthClient } from '@/components/auth-client'
 
 export const metadata: Metadata = {
-  title: 'Authentication — GenAI Learn Studio',
-  description: 'Sign in or register for GenAI Learn Learning Studio.',
+  title: 'Authentication — EKLAVYA Studio',
+  description: 'Sign in or register for EKLAVYA Learning Studio.',
 }
 
 export default async function AuthPage({

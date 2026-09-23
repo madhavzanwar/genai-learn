@@ -150,13 +150,13 @@ export function AuthClient({ defaultTab }: { defaultTab: 'login' | 'register' })
       {/* Official Studio Brand Mark Header */}
       <Link href="/" className="flex items-center gap-2.5 group mb-8">
         <div className="w-8 h-8 rounded-xs bg-[#18181B] text-[#F7F4EF] flex items-center justify-center font-mono font-black text-sm tracking-tighter shadow-2xs group-hover:scale-105 transition-transform">
-          GL
+          EK
         </div>
         <div className="flex flex-col text-left">
-          <span className="text-[13px] font-black tracking-widest uppercase text-[#18181B] leading-none">
-            GenAI Learn
+          <span className="text-[14px] font-black tracking-widest uppercase text-[#18181B] leading-none">
+            EKLAVYA
           </span>
-          <span className="text-[10px] font-mono uppercase tracking-wider text-stone-600 leading-none mt-1">
+          <span className="text-[9.5px] font-mono uppercase tracking-wider text-stone-600 leading-none mt-1">
             Learning Studio
           </span>
         </div>
@@ -359,7 +359,7 @@ export function AuthClient({ defaultTab }: { defaultTab: 'login' | 'register' })
       </div>
 
       <p className="mt-8 text-xs font-mono text-stone-600 text-center">
-        GenAI Learn Learning Studio &bull; Editorial Learning System
+        EKLAVYA Learning Studio &bull; Editorial Learning System
       </p>
     </div>
   )

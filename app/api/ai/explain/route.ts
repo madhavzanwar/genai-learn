@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     if (apiKey) {
       try {
         const prompt = `
-You are a friendly, highly knowledgeable AI tutor for an educational platform called GenAI Learn.
+You are a friendly, highly knowledgeable AI tutor for an educational platform called EKLAVYA.
 A student in the course asks: "${concept}"
 
 Explain this clearly in 3-4 simple sentences:
