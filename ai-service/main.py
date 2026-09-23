@@ -37,7 +37,7 @@ class HintBatchRequest(BaseModel):
 
 @app.get("/")
 def root():
-    return {"status": "GenAI Learn AI Service running"}
+    return {"status": "Eklavya AI Service running"}
 
 
 @app.post("/hint")
@@ -83,7 +83,7 @@ In 2 sentences max, explain why the correct answer is right. Use very simple lan
 @app.post("/explain")
 async def explain_concept(req: ExplainRequest):
     prompt = f"""
-You are a friendly AI tutor teaching a beginner AI/ML course called GenAI Learn.
+You are a friendly AI tutor teaching a beginner AI/ML course called Eklavya.
 
 A student wants to understand: "{req.concept}"
 

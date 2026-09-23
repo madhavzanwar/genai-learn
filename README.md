@@ -4,7 +4,7 @@
 
 A full-stack Learning Management System purpose-built for AI/ML education — video lessons, adaptive quizzes, progress-gated unlocking, and a Gemini-powered AI tutor, all wrapped in a clean, warm minimal interface.
 
-Built by **DS Virtual Lab**.
+Built by **Eklavya**.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
@@ -590,7 +590,7 @@ Distributed under the **MIT License**. See `LICENSE` for details.
 ## Author
 
 **Madhav Zanwar**
-Built as part of **DS Virtual Lab**
+Built as part of **Eklavya**
 
 - GitHub: [@madhavzanwar](https://github.com/madhavzanwar)
 

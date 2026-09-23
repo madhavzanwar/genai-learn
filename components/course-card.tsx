@@ -132,6 +132,13 @@ export function CourseCard({ course, isFeatured = false }: CourseCardProps) {
       badgeBorder: 'border-[#C4B5FD]',
       accentBar: 'bg-[#C4B5FD]',
     },
+    'Data Science': {
+      accentBg: 'bg-[#FFF7ED]',
+      badgeBg: 'bg-[#FED7AA]/50',
+      badgeText: 'text-[#9A3412]',
+      badgeBorder: 'border-[#FED7AA]',
+      accentBar: 'bg-[#FED7AA]',
+    },
     Advanced: {
       accentBg: 'bg-[#F0F9FF]',
       badgeBg: 'bg-[#BAE6FD]/50',
@@ -190,7 +197,12 @@ export function CourseCard({ course, isFeatured = false }: CourseCardProps) {
           </span>
           
           <div className="flex items-center gap-1.5">
-            {isLocked ? (
+            {course.isExternal ? (
+              <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded-xs border border-amber-300">
+                <ArrowUpRight className="size-3 text-amber-700" />
+                EXTERNAL
+              </span>
+            ) : isLocked ? (
               <span className="inline-flex items-center gap-1 text-[11px] font-mono text-stone-500 bg-white/80 px-2 py-0.5 rounded-xs border border-[#E4E0D7]">
                 <Lock className="size-3 text-stone-400" />
                 LOCKED
@@ -247,12 +259,20 @@ export function CourseCard({ course, isFeatured = false }: CourseCardProps) {
 
           {/* Action Bar */}
           <div className="pt-1">
-            <div className={`w-full py-2 px-3 rounded-xs text-[11.5px] font-mono uppercase tracking-wider font-semibold flex items-center justify-center gap-1.5 transition-all ${
-              isLocked 
+            <div className={`w-full py-2.5 px-3 rounded-xs text-[11.5px] font-mono uppercase tracking-wider font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              course.isExternal
+                ? 'bg-[#18181B] text-[#F7F4EF] group-hover:bg-stone-800'
+                : isLocked 
                 ? 'bg-stone-100 text-stone-600 hover:bg-stone-200' 
                 : 'bg-[#18181B] text-[#F7F4EF] group-hover:bg-stone-800'
             }`}>
-              <span>{isLocked ? 'View Prerequisites' : 'Start Course'}</span>
+              <span>
+                {course.isExternal 
+                  ? 'Visit Course / External Link' 
+                  : isLocked 
+                  ? 'View Prerequisites' 
+                  : 'Start Course'}
+              </span>
               <ArrowUpRight className="size-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </div>
@@ -263,7 +283,17 @@ export function CourseCard({ course, isFeatured = false }: CourseCardProps) {
 
   return (
     <>
-      {isLocked ? (
+      {course.isExternal && course.externalUrl ? (
+        <a
+          href={course.externalUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group block h-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#18181B] rounded-md"
+          aria-label={`Visit external course: ${course.title} (opens in new tab)`}
+        >
+          {cardContent}
+        </a>
+      ) : isLocked ? (
         <div
           role="button"
           tabIndex={0}

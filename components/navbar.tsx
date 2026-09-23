@@ -52,14 +52,14 @@ export function Navbar() {
           
           {/* Studio Brand Mark */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-sm bg-[#18181B] text-[#F7F4EF] flex items-center justify-center font-mono font-black text-sm tracking-tighter">
-              GL
+            <div className="w-8 h-8 rounded-sm bg-[#18181B] text-[#F7F4EF] flex items-center justify-center font-mono font-black text-sm tracking-tighter shadow-2xs group-hover:scale-105 transition-transform">
+              EK
             </div>
             <div className="flex flex-col text-left">
-              <span className="text-[13px] font-black tracking-widest uppercase text-[#18181B] leading-none">
-                GenAI Learn
+              <span className="text-[14px] font-black tracking-widest uppercase text-[#18181B] leading-none">
+                EKLAVYA
               </span>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-stone-500 leading-none mt-1">
+              <span className="text-[9.5px] font-mono uppercase tracking-wider text-stone-500 leading-none mt-1">
                 Learning Studio
               </span>
             </div>
