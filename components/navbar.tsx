@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Menu, X, LogOut, User as UserIcon, ArrowRight, Play } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
-import { getUnlockedLessons, getWatchedLessons } from '@/lib/unlocked-lessons'
+import { getUnlockedLessons, getWatchedLessons, resetStudentProgress } from '@/lib/unlocked-lessons'
 
 export function Navbar() {
   const router = useRouter()
@@ -24,6 +24,9 @@ export function Navbar() {
       if (unlocked.length > 1 || watched.length > 0) {
         setHasProgress(true)
         setUnlockedCount(Math.min(6, Math.max(1, unlocked.length)))
+      } else {
+        setHasProgress(false)
+        setUnlockedCount(1)
       }
     }
 
@@ -35,7 +38,10 @@ export function Navbar() {
   const handleLogout = () => {
     localStorage.removeItem('genai_token')
     localStorage.removeItem('genai_user')
+    resetStudentProgress()
     setUserName(null)
+    setHasProgress(false)
+    setUnlockedCount(1)
     router.refresh()
   }
 

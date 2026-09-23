@@ -66,7 +66,16 @@ export async function register(name: string, email: string, password: string) {
       if (existing) {
         throw new Error('This email address is already registered.')
       }
-      accounts.push({ name, email, password, token: localToken, createdAt: new Date().toISOString() })
+      accounts.push({
+        name,
+        email,
+        password,
+        token: localToken,
+        createdAt: new Date().toISOString(),
+        unlockedLessons: ['l1'],
+        unlockedCourses: ['intro-to-genai'],
+        watchedLessons: [],
+      })
       localStorage.setItem('genai_accounts', JSON.stringify(accounts))
     } catch (e: any) {
       if (e.message?.includes('already registered')) throw e
@@ -82,7 +91,14 @@ export async function register(name: string, email: string, password: string) {
   throw new Error('Unable to complete registration. Please try again.')
 }
 
-export async function login(email: string, password: string) {
+export async function login(email: string, password: string): Promise<{
+  token: string
+  name: string
+  email: string
+  unlockedLessons?: string[]
+  unlockedCourses?: string[]
+  watchedLessons?: string[]
+}> {
   // 1. Attempt remote backend with a strict 2.5-second timeout
   try {
     const res = await fetchWithTimeout(
@@ -102,6 +118,8 @@ export async function login(email: string, password: string) {
         name: string
         email: string
         unlockedLessons?: string[]
+        unlockedCourses?: string[]
+        watchedLessons?: string[]
       }
     }
     if (res.status === 401 || res.status === 400) {
@@ -126,7 +144,9 @@ export async function login(email: string, password: string) {
             token: found.token || `student_jwt_${Date.now()}`,
             name: found.name,
             email: found.email,
-            unlockedLessons: ['l1'],
+            unlockedLessons: found.unlockedLessons || ['l1'],
+            unlockedCourses: found.unlockedCourses || ['intro-to-genai'],
+            watchedLessons: found.watchedLessons || [],
           }
         } else {
           throw new Error('Invalid email or password')
@@ -144,6 +164,8 @@ export async function login(email: string, password: string) {
         name: currentUser,
         email,
         unlockedLessons: ['l1'],
+        unlockedCourses: ['intro-to-genai'],
+        watchedLessons: [],
       }
     }
   }

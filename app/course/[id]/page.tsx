@@ -127,8 +127,8 @@ function CoursePageContent({
   useEffect(() => {
     setVideoWatched(isLessonWatched(lessonId))
     const unlocked = getUnlockedLessons()
-    setUnlockedCount(Math.max(1, unlocked.length))
-  }, [lessonId])
+    setUnlockedCount(Math.min(totalLessons, Math.max(1, unlocked.length)))
+  }, [lessonId, totalLessons])
 
   // Handle drawer escape key
   useEffect(() => {
@@ -152,7 +152,7 @@ function CoursePageContent({
     markLessonWatched(lesson.id)
     setVideoWatched(true)
     const unlocked = getUnlockedLessons()
-    setUnlockedCount(Math.max(1, unlocked.length))
+    setUnlockedCount(Math.min(totalLessons, Math.max(1, unlocked.length)))
   }
 
   const goToQuiz = () => {

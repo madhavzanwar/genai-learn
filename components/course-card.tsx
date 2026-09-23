@@ -102,11 +102,18 @@ function getCourseCurriculum(course: Course): CourseCurriculum {
 
 export function CourseCard({ course, isFeatured = false }: CourseCardProps) {
   const [showModal, setShowModal] = useState(false)
-  const [isUnlocked, setIsUnlocked] = useState(!course.locked)
+  const [isUnlocked, setIsUnlocked] = useState(
+    course.id === 'intro-to-genai' ? true : isCourseUnlocked(course.id)
+  )
 
   useEffect(() => {
-    setIsUnlocked(!course.locked || isCourseUnlocked(course.id))
-  }, [course.id, course.locked])
+    const updateStatus = () => {
+      setIsUnlocked(course.id === 'intro-to-genai' ? true : isCourseUnlocked(course.id))
+    }
+    updateStatus()
+    window.addEventListener('storage', updateStatus)
+    return () => window.removeEventListener('storage', updateStatus)
+  }, [course.id])
 
   const isLocked = !isUnlocked
 

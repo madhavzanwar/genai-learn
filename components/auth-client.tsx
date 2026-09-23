@@ -68,6 +68,8 @@ function FieldRow({
   )
 }
 
+import { resetStudentProgress, saveUnlockedLessons, saveWatchedLessons, saveUnlockedCourses } from '@/lib/unlocked-lessons'
+
 export function AuthClient({ defaultTab }: { defaultTab: 'login' | 'register' }) {
   const router = useRouter()
   const [loginEmail, setLoginEmail] = useState('')
@@ -89,11 +91,20 @@ export function AuthClient({ defaultTab }: { defaultTab: 'login' | 'register' })
         setError('Please enter both your email address and password.')
         return
       }
+      resetStudentProgress()
       const data = await login(loginEmail.trim(), loginPassword)
       localStorage.setItem('genai_token', data.token)
       localStorage.setItem('genai_user', data.name)
-      if (data.unlockedLessons) {
-        localStorage.setItem('unlockedLessons', JSON.stringify(data.unlockedLessons))
+      if (data.unlockedLessons && Array.isArray(data.unlockedLessons)) {
+        saveUnlockedLessons(data.unlockedLessons)
+      } else {
+        resetStudentProgress()
+      }
+      if (data.unlockedCourses && Array.isArray(data.unlockedCourses)) {
+        saveUnlockedCourses(data.unlockedCourses)
+      }
+      if (data.watchedLessons && Array.isArray(data.watchedLessons)) {
+        saveWatchedLessons(data.watchedLessons)
       }
       router.push('/')
       router.refresh()
@@ -119,9 +130,12 @@ export function AuthClient({ defaultTab }: { defaultTab: 'login' | 'register' })
         setError('Email address and password are required.')
         return
       }
+      // Reset progress so new account starts with ONLY lesson 1 unlocked
+      resetStudentProgress()
       const data = await register(name, registerEmail.trim(), registerPassword)
       localStorage.setItem('genai_token', data.token)
       localStorage.setItem('genai_user', data.name)
+      resetStudentProgress()
       router.push('/')
       router.refresh()
     } catch (err) {

@@ -61,7 +61,7 @@ export const courses: Course[] = [
     students: 9812,
     modules: 5,
     duration: '4h 10m',
-    locked: false,
+    locked: true,
     thumbnail: '',
     category: 'Foundations',
   },
