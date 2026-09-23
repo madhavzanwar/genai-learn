@@ -6,3 +6,4 @@ ai-service/.env
 .next
 __pycache__
 *.pyc
+*.tsbuildinfo

@@ -60,7 +60,7 @@ function CoursePageContent({
   }, [lessonId])
 
   const goToQuiz = () => {
-    if (videoWatched) router.push(`/quiz/${id}`)
+    if (videoWatched) router.push(`/quiz/${id}?lesson=${lessonId}`)
   }
 
   const handleAskAI = async () => {

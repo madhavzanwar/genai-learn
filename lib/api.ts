@@ -38,7 +38,8 @@ export async function login(email: string, password: string) {
 export async function submitQuiz(
   courseId: string,
   answers: number[],
-  token: string
+  token: string,
+  lessonId: string = 'l1'
 ) {
   const res = await fetch(`${BASE}/quiz/submit`, {
     method: 'POST',
@@ -46,7 +47,7 @@ export async function submitQuiz(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ courseId, answers }),
+    body: JSON.stringify({ courseId, answers, lessonId }),
   })
 
   const data = await res.json()

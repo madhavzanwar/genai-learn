@@ -5,18 +5,28 @@ import { useRouter } from 'next/navigation'
 import { RotateCcw, Lightbulb } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { quizQuestions, PASS_SCORE, TOTAL_QUESTIONS } from '@/lib/quiz-data'
+import { getQuizForLesson, PASS_SCORE } from '@/lib/quiz-data'
+import { getNextLessonId } from '@/lib/data'
 import { unlockLesson } from '@/lib/unlocked-lessons'
 import { submitQuiz } from '@/lib/api'
 
-const NEXT_LESSON_ID = 'l3'
-
-export function QuizClient({ courseId }: { courseId: string }) {
+export function QuizClient({
+  courseId,
+  lessonId = 'l1',
+}: {
+  courseId: string
+  lessonId?: string
+}) {
   const router = useRouter()
+  const quiz = getQuizForLesson(lessonId)
+  const questions = quiz.questions
+  const totalQuestions = questions.length
+  const nextLessonId = getNextLessonId(lessonId)
+
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [answers, setAnswers] = useState<(number | null)[]>(
-    Array(TOTAL_QUESTIONS).fill(null)
+    Array(totalQuestions).fill(null)
   )
   const [quizFinished, setQuizFinished] = useState(false)
   const [score, setScore] = useState(0)
@@ -24,9 +34,9 @@ export function QuizClient({ courseId }: { courseId: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [hints, setHints] = useState<{ question: string; hint: string }[]>([])
 
-  const question = quizQuestions[currentIndex]
-  const isLast = currentIndex === TOTAL_QUESTIONS - 1
-  const progressWidth = ((currentIndex + 1) / TOTAL_QUESTIONS) * 100
+  const question = questions[currentIndex]
+  const isLast = currentIndex === totalQuestions - 1
+  const progressWidth = ((currentIndex + 1) / totalQuestions) * 100
 
   const finishQuiz = async (updated: (number | null)[]) => {
     setAnswers(updated)
@@ -38,10 +48,13 @@ export function QuizClient({ courseId }: { courseId: string }) {
     if (token) {
       try {
         setIsSubmitting(true)
-        const result = await submitQuiz(courseId, answerValues, token)
+        const result = await submitQuiz(courseId, answerValues, token, lessonId)
         setScore(result.score)
         setPassed(result.passed)
         setHints(result.hints ?? [])
+        if (result.passed && nextLessonId) {
+          unlockLesson(nextLessonId)
+        }
         localStorage.setItem(
           'unlockedLessons',
           JSON.stringify(result.unlockedLessons)
@@ -56,10 +69,14 @@ export function QuizClient({ courseId }: { courseId: string }) {
     }
 
     const finalScore = updated.filter(
-      (ans, i) => ans === quizQuestions[i]?.answer
+      (ans, i) => ans === questions[i]?.answer
     ).length
+    const isPassed = finalScore >= PASS_SCORE
     setScore(finalScore)
-    setPassed(finalScore >= PASS_SCORE)
+    setPassed(isPassed)
+    if (isPassed && nextLessonId) {
+      unlockLesson(nextLessonId)
+    }
     setHints([])
     setQuizFinished(true)
   }
@@ -82,7 +99,7 @@ export function QuizClient({ courseId }: { courseId: string }) {
   const handleRetake = () => {
     setCurrentIndex(0)
     setSelectedAnswer(null)
-    setAnswers(Array(TOTAL_QUESTIONS).fill(null))
+    setAnswers(Array(totalQuestions).fill(null))
     setQuizFinished(false)
     setScore(0)
     setPassed(false)
@@ -90,8 +107,12 @@ export function QuizClient({ courseId }: { courseId: string }) {
   }
 
   const handleUnlockNextLesson = () => {
-    unlockLesson(NEXT_LESSON_ID)
-    router.push(`/course/${courseId}`)
+    if (nextLessonId) {
+      unlockLesson(nextLessonId)
+      router.push(`/course/${courseId}?lesson=${nextLessonId}`)
+    } else {
+      router.push(`/course/${courseId}?lesson=${lessonId}`)
+    }
   }
 
   if (quizFinished) {
@@ -99,7 +120,7 @@ export function QuizClient({ courseId }: { courseId: string }) {
       <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-lg flex flex-col items-center gap-6 text-center">
           <span className="text-[48px] font-semibold text-foreground tracking-tight leading-none">
-            {score}/{TOTAL_QUESTIONS}
+            {score}/{totalQuestions}
           </span>
 
           <div
@@ -115,11 +136,13 @@ export function QuizClient({ courseId }: { courseId: string }) {
 
           <p className="text-[14px] text-muted-foreground leading-relaxed max-w-sm">
             {passed
-              ? 'Great job! You can now unlock the next lesson.'
+              ? nextLessonId
+                ? 'Great job! You can now unlock the next lesson.'
+                : 'Congratulations! You have completed all lessons and quizzes in this course.'
               : 'You need 7/10 to unlock the next lesson. Review the material and try again.'}
           </p>
 
-          {score < TOTAL_QUESTIONS && hints.length > 0 && (
+          {score < totalQuestions && hints.length > 0 && (
             <div className="w-full flex flex-col gap-3 text-left">
               <p className="text-[13px] font-semibold text-foreground tracking-tight">
                 Review your wrong answers
@@ -145,7 +168,7 @@ export function QuizClient({ courseId }: { courseId: string }) {
 
           {passed ? (
             <Button size="lg" onClick={handleUnlockNextLesson}>
-              Unlock Next Lesson
+              {nextLessonId ? 'Unlock Next Lesson' : 'Complete Course'}
             </Button>
           ) : (
             <Button size="lg" onClick={handleRetake}>
@@ -172,7 +195,7 @@ export function QuizClient({ courseId }: { courseId: string }) {
         {/* Question header */}
         <div className="flex items-center justify-between gap-4">
           <span className="text-[13px] text-muted-foreground">
-            Question {currentIndex + 1} of {TOTAL_QUESTIONS}
+            Question {currentIndex + 1} of {totalQuestions}
           </span>
           <span
             className={cn(
