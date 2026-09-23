@@ -131,23 +131,54 @@ export async function getProgress(token: string) {
 }
 
 export async function explainConcept(concept: string) {
-  const res = await fetchWithTimeout(
-    `${BASE}/ai/explain`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ concept }),
-    },
-    6000
-  )
-
-  let data: any
+  // 1. First try native Next.js serverless route on current origin (zero Render cold start)
   try {
-    data = await res.json()
+    const res = await fetchWithTimeout(
+      '/api/ai/explain',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ concept }),
+      },
+      7000
+    )
+
+    if (res.ok) {
+      const data = await res.json()
+      if (data?.explanation) {
+        return data as { explanation: string }
+      }
+    }
   } catch {
-    throw new Error('AI tutor server unreachable')
+    // Fall back to external backend if local route is unavailable
   }
 
-  if (!res.ok) throw new Error(data.message || 'AI tutor unavailable')
-  return data as { explanation: string }
+  // 2. Secondary fallback to external backend if configured
+  try {
+    const res = await fetchWithTimeout(
+      `${BASE}/ai/explain`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ concept }),
+      },
+      6000
+    )
+
+    let data: any
+    try {
+      data = await res.json()
+    } catch {
+      throw new Error('AI tutor server unreachable')
+    }
+
+    if (!res.ok) throw new Error(data?.message || 'AI tutor unavailable')
+    return data as { explanation: string }
+  } catch (err) {
+    throw new Error(
+      err instanceof Error
+        ? err.message
+        : 'AI tutor is temporarily taking a breather. Please try asking again in a moment.'
+    )
+  }
 }
