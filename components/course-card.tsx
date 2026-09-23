@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Star, Users, Lock, Unlock, Clock, Layers, ArrowUpRight, X, ArrowRight, BookOpen, AlertCircle } from 'lucide-react'
 import type { Course } from '@/lib/data'
+import { isCourseUnlocked } from '@/lib/unlocked-lessons'
 
 interface CourseCardProps {
   course: Course
@@ -38,15 +39,12 @@ function getCourseCurriculum(course: Course): CourseCurriculum {
       prerequisites: [
         'Must complete Introduction to Generative AI first',
         'Prompt Engineering Fundamentals recommended',
-        'Proficiency in Python and async/await control flows',
       ],
       syllabus: [
-        { title: 'Module 1: Foundations of Autonomous Agents & ReAct Patterns', desc: 'Deconstructing reasoning-and-acting loops, autonomy tiers, and execution planners' },
-        { title: 'Module 2: Tool Calling, Function Execution & Structured Outputs', desc: 'Equipping agents with external search, database APIs, and python execution engines' },
-        { title: 'Module 3: Memory Architectures & Vector Stores', desc: 'Episodic, semantic, and working memories with semantic retrieval pipelines' },
-        { title: 'Module 4: Multi-Agent Collaboration & Hierarchies', desc: 'Supervisor-worker patterns, consensus mechanisms, and inter-agent routing' },
-        { title: 'Module 5: Guardrails, Human-in-the-Loop & Evaluation', desc: 'Validating tool arguments, safety policies, and trajectory evaluations' },
-        { title: 'Module 6: Production Deployment & Observability', desc: 'Streaming tokens, rate limiting, and end-to-end tracing with telemetry' },
+        { title: 'Module 1: Tool Use & Function Calling', desc: 'Connecting LLMs to external APIs, structured outputs, and schema design' },
+        { title: 'Module 2: Memory & Context Windows', desc: 'Short-term vs long-term memory, conversation buffers, and entity tracking' },
+        { title: 'Module 3: Multi-Agent Systems & Orchestration', desc: 'Role specialization, delegation patterns, and consensus protocols' },
+        { title: 'Module 4: Guardrails & Autonomous Execution', desc: 'Safety envelopes, loop prevention, and graceful error recovery' },
       ],
     }
   }
@@ -104,6 +102,13 @@ function getCourseCurriculum(course: Course): CourseCurriculum {
 
 export function CourseCard({ course, isFeatured = false }: CourseCardProps) {
   const [showModal, setShowModal] = useState(false)
+  const [isUnlocked, setIsUnlocked] = useState(!course.locked)
+
+  useEffect(() => {
+    setIsUnlocked(!course.locked || isCourseUnlocked(course.id))
+  }, [course.id, course.locked])
+
+  const isLocked = !isUnlocked
 
   // Category specific pastel accents strictly per user specification
   const categoryStyles: Record<string, { 
@@ -178,7 +183,7 @@ export function CourseCard({ course, isFeatured = false }: CourseCardProps) {
           </span>
           
           <div className="flex items-center gap-1.5">
-            {course.locked ? (
+            {isLocked ? (
               <span className="inline-flex items-center gap-1 text-[11px] font-mono text-stone-500 bg-white/80 px-2 py-0.5 rounded-xs border border-[#E4E0D7]">
                 <Lock className="size-3 text-stone-400" />
                 LOCKED
@@ -236,11 +241,11 @@ export function CourseCard({ course, isFeatured = false }: CourseCardProps) {
           {/* Action Bar */}
           <div className="pt-1">
             <div className={`w-full py-2 px-3 rounded-xs text-[11.5px] font-mono uppercase tracking-wider font-semibold flex items-center justify-center gap-1.5 transition-all ${
-              course.locked 
+              isLocked 
                 ? 'bg-stone-100 text-stone-600 hover:bg-stone-200' 
                 : 'bg-[#18181B] text-[#F7F4EF] group-hover:bg-stone-800'
             }`}>
-              <span>{course.locked ? 'View Prerequisites' : 'Start Course'}</span>
+              <span>{isLocked ? 'View Prerequisites' : 'Start Course'}</span>
               <ArrowUpRight className="size-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </div>
@@ -251,7 +256,7 @@ export function CourseCard({ course, isFeatured = false }: CourseCardProps) {
 
   return (
     <>
-      {course.locked ? (
+      {isLocked ? (
         <div
           role="button"
           tabIndex={0}

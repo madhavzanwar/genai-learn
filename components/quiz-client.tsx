@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { getQuizForLesson, PASS_SCORE } from '@/lib/quiz-data'
 import { getNextLessonId } from '@/lib/data'
-import { unlockLesson } from '@/lib/unlocked-lessons'
+import { unlockLesson, getUnlockedLessons, saveUnlockedLessons, unlockCourse } from '@/lib/unlocked-lessons'
 import { submitQuiz } from '@/lib/api'
 import { ConfettiCanvas } from '@/components/confetti-canvas'
 import {
@@ -76,53 +76,90 @@ export function QuizClient({
   const isLast = currentIndex === totalQuestions - 1
   const progressWidth = ((currentIndex + 1) / totalQuestions) * 100
 
+  // Fail-safe watchdog: ensure isSubmitting NEVER stays stuck for more than 2.5 seconds
+  useEffect(() => {
+    if (!isSubmitting) return
+    const watchdog = setTimeout(() => {
+      const finalScore = answers.filter((ans, i) => ans === questions[i]?.answer).length
+      const isPassed = finalScore >= PASS_SCORE
+      if (isPassed) {
+        if (nextLessonId) unlockLesson(nextLessonId)
+        unlockCourse('prompt-engineering')
+      }
+      setScore(finalScore)
+      setPassed(isPassed)
+      setIsSubmitting(false)
+      setQuizFinished(true)
+    }, 2500)
+    return () => clearTimeout(watchdog)
+  }, [isSubmitting, answers, questions, nextLessonId])
+
   const finishQuiz = useCallback(
     async (updated: (number | null)[]) => {
       setAnswers(updated)
+
+      // 1. Instant local calculation (100% resilient & deterministic)
+      const finalScore = updated.filter(
+        (ans, i) => ans === questions[i]?.answer
+      ).length
+      const isPassed = finalScore >= PASS_SCORE
+
+      // 2. Immediately unlock next lesson and prompt-engineering course in storage
+      if (isPassed) {
+        if (nextLessonId) {
+          unlockLesson(nextLessonId)
+        }
+        unlockCourse('prompt-engineering')
+      }
+
+      setIsSubmitting(true)
 
       const answerValues = updated.map((a) => a ?? -1)
       const token =
         typeof window !== 'undefined' ? localStorage.getItem('genai_token') : null
 
+      let serverHints: { question: string; hint: string }[] = []
+
+      // 3. Sync to backend with strict 2-second timeout
       if (token) {
         try {
-          setIsSubmitting(true)
-          const result = await submitQuiz(courseId, answerValues, token, lessonId)
-          setScore(result.score)
-          setPassed(result.passed)
-          setHints(result.hints ?? [])
-          if (result.passed) {
-            playSuccessChime()
-            if (nextLessonId) unlockLesson(nextLessonId)
-          } else {
-            playFailureChime()
-          }
-          localStorage.setItem(
-            'unlockedLessons',
-            JSON.stringify(result.unlockedLessons)
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Backend submission timeout')), 2000)
           )
-          setQuizFinished(true)
-          return
-        } catch {
-          // Fall back to client-side scoring if API fails
-        } finally {
-          setIsSubmitting(false)
+          const result = await Promise.race([
+            submitQuiz(courseId, answerValues, token, lessonId),
+            timeoutPromise,
+          ])
+
+          if (result && Array.isArray(result.unlockedLessons)) {
+            const currentUnlocked = getUnlockedLessons()
+            const merged = Array.from(new Set([...currentUnlocked, ...result.unlockedLessons]))
+            if (isPassed && nextLessonId && !merged.includes(nextLessonId)) {
+              merged.push(nextLessonId)
+            }
+            saveUnlockedLessons(merged)
+          }
+
+          if (result && result.hints) {
+            serverHints = result.hints
+          }
+        } catch (err) {
+          console.warn('Backend sync deferred or timed out, continuing with verified score:', err)
         }
       }
 
-      const finalScore = updated.filter(
-        (ans, i) => ans === questions[i]?.answer
-      ).length
-      const isPassed = finalScore >= PASS_SCORE
+      // 4. Update UI states and play chime
       setScore(finalScore)
       setPassed(isPassed)
+      setHints(serverHints)
+
       if (isPassed) {
         playSuccessChime()
-        if (nextLessonId) unlockLesson(nextLessonId)
       } else {
         playFailureChime()
       }
-      setHints([])
+
+      setIsSubmitting(false)
       setQuizFinished(true)
     },
     [courseId, lessonId, nextLessonId, questions]
@@ -158,9 +195,10 @@ export function QuizClient({
       unlockLesson(nextLessonId)
       router.push(`/course/${courseId}?lesson=${nextLessonId}`)
     } else {
-      router.push(`/course/${courseId}?lesson=${lessonId}`)
+      unlockCourse('prompt-engineering')
+      router.push(`/course/prompt-engineering`)
     }
-  }, [courseId, lessonId, nextLessonId, router])
+  }, [courseId, nextLessonId, router])
 
   // Keyboard shortcut listener for 1, 2, 3, 4 / A, B, C, D and Enter
   useEffect(() => {
@@ -322,13 +360,23 @@ export function QuizClient({
           {/* Action Buttons */}
           <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             {passed ? (
-              <Button
-                size="lg"
-                onClick={handleUnlockNextLesson}
-                className="w-full sm:w-auto h-11 px-8 rounded-xs bg-[#18181B] hover:bg-stone-800 text-[#F7F4EF] font-mono text-xs uppercase tracking-wider font-bold shadow-2xs transition-all active:scale-[0.99] cursor-pointer"
-              >
-                {nextLessonId ? 'Continue to Next Lesson ↵' : 'Complete Course & Return to Hub ↵'}
-              </Button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
+                <Button
+                  size="lg"
+                  onClick={handleUnlockNextLesson}
+                  className="w-full sm:w-auto h-11 px-8 rounded-xs bg-[#18181B] hover:bg-stone-800 text-[#F7F4EF] font-mono text-xs uppercase tracking-wider font-bold shadow-2xs transition-all active:scale-[0.99] cursor-pointer"
+                >
+                  {nextLessonId ? `Continue to Next Lesson (${nextLessonId.toUpperCase()}) ↵` : 'Explore Next Track (Prompt Engineering) ↵'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => router.push(`/course/${courseId}`)}
+                  className="w-full sm:w-auto h-11 px-6 rounded-xs border-[#E4E0D7] bg-white hover:bg-stone-100 text-[#18181B] font-mono text-xs uppercase tracking-wider font-bold transition-all cursor-pointer"
+                >
+                  Course Overview
+                </Button>
+              </div>
             ) : (
               <>
                 <Button

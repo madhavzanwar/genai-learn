@@ -32,9 +32,9 @@ End with one sentence on why this concept matters.
 async function getHintsBatch(wrongAnswers) {
   if (!wrongAnswers.length) return [];
 
-  const hints = [];
-  for (const item of wrongAnswers) {
-    const prompt = `
+  const promises = wrongAnswers.slice(0, 3).map(async (item) => {
+    try {
+      const prompt = `
 You are a friendly AI tutor teaching a beginner AI/ML course.
 
 Question: ${item.question}
@@ -43,13 +43,19 @@ Correct answer: ${item.correct_answer}
 
 In 2 sentences max, explain why the correct answer is right. Use very simple language.
 `;
-    const hint = await generateText(prompt);
-    hints.push({
-      question: item.question,
-      hint,
-    });
-  }
-  return hints;
+      const hintPromise = generateText(prompt);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('AI hint timeout')), 2500)
+      );
+      const hint = await Promise.race([hintPromise, timeoutPromise]);
+      return { question: item.question, hint };
+    } catch {
+      return null;
+    }
+  });
+
+  const results = await Promise.all(promises);
+  return results.filter(Boolean);
 }
 
 module.exports = { explainConcept, getHintsBatch };
