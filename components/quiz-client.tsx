@@ -2,13 +2,21 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { RotateCcw, Lightbulb } from 'lucide-react'
+import { RotateCcw, Lightbulb, Volume2, VolumeX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { getQuizForLesson, PASS_SCORE } from '@/lib/quiz-data'
 import { getNextLessonId } from '@/lib/data'
 import { unlockLesson } from '@/lib/unlocked-lessons'
 import { submitQuiz } from '@/lib/api'
+import { ConfettiCanvas } from '@/components/confetti-canvas'
+import {
+  playOptionClick,
+  playSuccessChime,
+  playFailureChime,
+  isSoundMuted,
+  setSoundMuted,
+} from '@/lib/sound-effects'
 
 export function QuizClient({
   courseId,
@@ -30,9 +38,39 @@ export function QuizClient({
   )
   const [quizFinished, setQuizFinished] = useState(false)
   const [score, setScore] = useState(0)
+  const [displayedScore, setDisplayedScore] = useState(0)
   const [passed, setPassed] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [hints, setHints] = useState<{ question: string; hint: string }[]>([])
+  const [soundMuted, setLocalSoundMuted] = useState(false)
+
+  useEffect(() => {
+    setLocalSoundMuted(isSoundMuted())
+  }, [])
+
+  const toggleSound = () => {
+    const next = !soundMuted
+    setLocalSoundMuted(next)
+    setSoundMuted(next)
+  }
+
+  // Smooth animated counter for scorecard
+  useEffect(() => {
+    if (!quizFinished) return
+    let current = 0
+    const target = score
+    if (target === 0) {
+      setDisplayedScore(0)
+      return
+    }
+    const stepTime = Math.max(30, Math.floor(700 / target))
+    const timer = setInterval(() => {
+      current += 1
+      setDisplayedScore(current)
+      if (current >= target) clearInterval(timer)
+    }, stepTime)
+    return () => clearInterval(timer)
+  }, [quizFinished, score])
 
   const question = questions[currentIndex]
   const isLast = currentIndex === totalQuestions - 1
@@ -53,8 +91,11 @@ export function QuizClient({
           setScore(result.score)
           setPassed(result.passed)
           setHints(result.hints ?? [])
-          if (result.passed && nextLessonId) {
-            unlockLesson(nextLessonId)
+          if (result.passed) {
+            playSuccessChime()
+            if (nextLessonId) unlockLesson(nextLessonId)
+          } else {
+            playFailureChime()
           }
           localStorage.setItem(
             'unlockedLessons',
@@ -75,8 +116,11 @@ export function QuizClient({
       const isPassed = finalScore >= PASS_SCORE
       setScore(finalScore)
       setPassed(isPassed)
-      if (isPassed && nextLessonId) {
-        unlockLesson(nextLessonId)
+      if (isPassed) {
+        playSuccessChime()
+        if (nextLessonId) unlockLesson(nextLessonId)
+      } else {
+        playFailureChime()
       }
       setHints([])
       setQuizFinished(true)
@@ -176,16 +220,17 @@ export function QuizClient({
   // Results Screen
   if (quizFinished) {
     return (
-      <div className="w-full max-w-[620px] mx-auto px-4 flex justify-center">
-        <div className="w-full border border-[#E4E0D7] rounded-sm bg-white p-6 sm:p-10 shadow-[4px_4px_0px_0px_#18181B] flex flex-col items-center gap-6 text-center">
+      <div className="w-full max-w-[620px] mx-auto px-4 flex justify-center relative">
+        {passed && <ConfettiCanvas />}
+        <div className="w-full border border-[#E4E0D7] rounded-sm bg-white p-6 sm:p-10 shadow-[4px_4px_0px_0px_#18181B] flex flex-col items-center gap-6 text-center relative z-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xs bg-[#F7F4EF] border border-[#E4E0D7] text-xs font-mono font-bold uppercase tracking-widest text-stone-700">
             STUDIO QUIZ SCORECARD
           </div>
 
-          {/* Big Bold Score */}
+          {/* Big Bold Score (Animated Tally) */}
           <div className="flex items-baseline justify-center gap-2">
             <span className="font-mono text-6xl sm:text-7xl font-black text-[#18181B] tracking-tight leading-none">
-              {score}
+              {displayedScore}
             </span>
             <span className="font-mono text-2xl sm:text-3xl font-bold text-stone-400">
               / {totalQuestions}
@@ -348,16 +393,27 @@ export function QuizClient({
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xs bg-[#F7F4EF] border border-[#E4E0D7] text-xs font-mono font-bold uppercase tracking-wider text-[#18181B]">
             <span>QUESTION {questionNum} / {totalNum}</span>
           </div>
-          <span
-            className={cn(
-              'text-[10px] font-mono font-bold uppercase tracking-widest px-2.5 py-1 rounded-xs border',
-              question.difficulty === 'easy'
-                ? 'bg-emerald-100/70 text-emerald-800 border-emerald-300'
-                : 'bg-stone-100 text-stone-700 border-[#E4E0D7]'
-            )}
-          >
-            {question.difficulty === 'easy' ? 'EASY' : 'HARD'}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleSound}
+              title={soundMuted ? 'Sound effects muted (Click to enable)' : 'Sound effects active (Click to mute)'}
+              className="p-1 rounded-xs border border-[#E4E0D7] bg-[#F7F4EF] hover:bg-stone-200 text-stone-600 transition-colors cursor-pointer"
+              aria-label={soundMuted ? 'Unmute sounds' : 'Mute sounds'}
+            >
+              {soundMuted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5 text-stone-700" />}
+            </button>
+            <span
+              className={cn(
+                'text-[10px] font-mono font-bold uppercase tracking-widest px-2.5 py-1 rounded-xs border',
+                question.difficulty === 'easy'
+                  ? 'bg-emerald-100/70 text-emerald-800 border-emerald-300'
+                  : 'bg-stone-100 text-stone-700 border-[#E4E0D7]'
+              )}
+            >
+              {question.difficulty === 'easy' ? 'EASY' : 'HARD'}
+            </span>
+          </div>
         </div>
 
         {/* Question Statement */}
@@ -375,7 +431,10 @@ export function QuizClient({
               <button
                 key={idx}
                 type="button"
-                onClick={() => setSelectedAnswer(idx)}
+                onClick={() => {
+                  setSelectedAnswer(idx)
+                  playOptionClick()
+                }}
                 className={cn(
                   'group w-full text-left rounded-xs border px-4 py-3.5 sm:px-5 sm:py-4 transition-all duration-150 flex items-center justify-between gap-3 cursor-pointer',
                   isSelected

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { 
   ArrowRight, 
@@ -15,16 +15,32 @@ import {
   Star,
   Users,
   Sparkles,
-  ArrowUpRight
+  ArrowUpRight,
+  Search,
+  X
 } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { Navbar } from '@/components/navbar'
 import { CourseCard } from '@/components/course-card'
 import { courses } from '@/lib/data'
+import { getUnlockedLessons, getWatchedLessons } from '@/lib/unlocked-lessons'
 
 export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All')
   const [hoveredFeature, setHoveredFeature] = useState<number | null>(null)
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [resumeProgress, setResumeProgress] = useState<{ unlockedCount: number; watchedCount: number } | null>(null)
+
+  useEffect(() => {
+    const unlocked = getUnlockedLessons()
+    const watched = getWatchedLessons()
+    if (unlocked.length > 1 || watched.length > 0) {
+      setResumeProgress({
+        unlockedCount: Math.min(6, Math.max(1, unlocked.length)),
+        watchedCount: watched.length,
+      })
+    }
+  }, [])
 
   // Real category counts from actual lib/data.ts
   const categoryCounts = {
@@ -34,9 +50,16 @@ export default function HomePage() {
     Applied: courses.filter((c) => c.category === 'Applied').length,
   }
 
-  const filteredCourses = selectedCategory === 'All'
-    ? courses
-    : courses.filter((c) => c.category.toLowerCase() === selectedCategory.toLowerCase())
+  const filteredCourses = courses.filter((c) => {
+    const matchesCategory = selectedCategory === 'All' || c.category.toLowerCase() === selectedCategory.toLowerCase()
+    const q = searchQuery.toLowerCase().trim()
+    const matchesSearch = !q || 
+      c.title.toLowerCase().includes(q) ||
+      c.description.toLowerCase().includes(q) ||
+      c.category.toLowerCase().includes(q) ||
+      c.instructor.toLowerCase().includes(q)
+    return matchesCategory && matchesSearch
+  })
 
   // Real data for hero workspace composition from the primary course
   const heroCourse = courses[0] // "Introduction to Generative AI"
@@ -96,6 +119,35 @@ export default function HomePage() {
                   Create Free Account
                 </Link>
               </div>
+
+              {resumeProgress && (
+                <div className="p-3.5 bg-white border border-[#18181B] rounded-xs shadow-[3px_3px_0px_0px_#18181B] flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-300">
+                  <div className="flex items-center gap-3">
+                    <div className="size-9 rounded-xs bg-[#A7F3D0] border border-emerald-500 flex flex-col items-center justify-center text-emerald-950 font-bold font-mono">
+                      <span className="text-xs leading-none">{resumeProgress.unlockedCount}</span>
+                      <span className="text-[9px] text-emerald-800 font-normal leading-none">/6</span>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-900 bg-[#A7F3D0]/60 px-1.5 py-0.2 rounded-2xs border border-emerald-300">
+                          Active Progress
+                        </span>
+                        <span className="text-xs font-bold text-[#18181B]">Introduction to Generative AI</span>
+                      </div>
+                      <p className="text-[11px] font-mono text-stone-500 mt-0.5">
+                        {resumeProgress.unlockedCount} of 6 lessons unlocked • Milestone checkpoints active
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/course/intro-to-genai"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#18181B] hover:bg-stone-800 text-[#F7F4EF] rounded-xs text-xs font-mono uppercase font-bold tracking-wider transition-colors shrink-0 shadow-2xs"
+                  >
+                    <span>Resume Course</span>
+                    <ArrowRight className="size-3.5" />
+                  </Link>
+                </div>
+              )}
 
               {/* Editorial Checkpoints */}
               <div className="pt-6 border-t border-[#E4E0D7] grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono text-stone-600">
@@ -433,7 +485,7 @@ export default function HomePage() {
       <section id="courses" className="max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24 text-left">
         
         {/* Catalog Header & Filter Bar */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-8 gap-6">
           <div className="space-y-2">
             <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-stone-500">
               CURATED CURRICULUM
@@ -446,38 +498,86 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* Editorial Sliding-style Filter Bar */}
-          <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-white rounded-xs border border-[#E4E0D7] shadow-2xs self-start md:self-auto">
-            {(['All', 'Foundations', 'Advanced', 'Applied'] as const).map((cat) => {
-              const isSelected = selectedCategory === cat
-              return (
+          {/* Search bar & Category filters */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Live Search Input */}
+            <div className="relative min-w-[220px] sm:min-w-[260px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-stone-400 pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search tracks, topics, models..."
+                className="w-full pl-9 pr-8 py-2 bg-white rounded-xs border border-[#E4E0D7] text-xs font-mono text-[#18181B] placeholder:text-stone-400 focus:outline-hidden focus:border-[#18181B] transition-all shadow-2xs"
+              />
+              {searchQuery && (
                 <button
-                  key={cat}
                   type="button"
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3.5 py-1.5 rounded-xs text-[11px] font-mono uppercase tracking-wider font-bold transition-all ${
-                    isSelected
-                      ? 'bg-[#18181B] text-[#F7F4EF] shadow-xs'
-                      : 'text-stone-600 hover:text-[#18181B] hover:bg-[#F7F4EF]'
-                  }`}
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-stone-400 hover:text-stone-700"
+                  aria-label="Clear search"
                 >
-                  {cat === 'All' ? 'ALL COURSES' : cat.toUpperCase()} ({categoryCounts[cat]})
+                  <X className="size-3.5" />
                 </button>
-              )
-            })}
+              )}
+            </div>
+
+            {/* Editorial Sliding-style Filter Bar */}
+            <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-white rounded-xs border border-[#E4E0D7] shadow-2xs self-start sm:self-auto">
+              {(['All', 'Foundations', 'Advanced', 'Applied'] as const).map((cat) => {
+                const isSelected = selectedCategory === cat
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-3 py-1.5 rounded-xs text-[11px] font-mono uppercase tracking-wider font-bold transition-all ${
+                      isSelected
+                        ? 'bg-[#18181B] text-[#F7F4EF] shadow-xs'
+                        : 'text-stone-600 hover:text-[#18181B] hover:bg-[#F7F4EF]'
+                    }`}
+                  >
+                    {cat === 'All' ? 'ALL COURSES' : cat.toUpperCase()} ({categoryCounts[cat]})
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Dynamic Course Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course, idx) => (
-            <CourseCard 
-              key={course.id} 
-              course={course} 
-              isFeatured={idx === 0 && selectedCategory === 'All'}
-            />
-          ))}
-        </div>
+        {/* Dynamic Course Grid or Empty State */}
+        {filteredCourses.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCourses.map((course, idx) => (
+              <CourseCard 
+                key={course.id} 
+                course={course} 
+                isFeatured={idx === 0 && selectedCategory === 'All' && !searchQuery}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 px-6 bg-white border border-[#E4E0D7] rounded-sm space-y-4 max-w-lg mx-auto shadow-2xs">
+            <div className="inline-flex size-12 rounded-full bg-[#FED7AA]/40 border border-[#FED7AA] items-center justify-center text-[#9A3412] mx-auto">
+              <Search className="size-5" />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="text-base font-bold text-[#18181B]">
+                No courses found matching &ldquo;{searchQuery}&rdquo;
+              </h3>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                We couldn&apos;t find any tracks with that title or description. Try searching for &ldquo;LLM&rdquo;, &ldquo;Prompt&rdquo;, &ldquo;Fine-Tuning&rdquo;, or reset your filters.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setSearchQuery(''); setSelectedCategory('All') }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#18181B] text-[#F7F4EF] rounded-xs text-xs font-mono font-bold uppercase tracking-wider hover:bg-stone-800 transition-colors"
+            >
+              Reset All Filters
+            </button>
+          </div>
+        )}
 
       </section>
 

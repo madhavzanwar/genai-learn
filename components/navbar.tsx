@@ -3,17 +3,33 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Menu, X, LogOut, User as UserIcon } from 'lucide-react'
+import { Menu, X, LogOut, User as UserIcon, ArrowRight, Play } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
+import { getUnlockedLessons, getWatchedLessons } from '@/lib/unlocked-lessons'
 
 export function Navbar() {
   const router = useRouter()
   const [userName, setUserName] = useState<string | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [unlockedCount, setUnlockedCount] = useState<number>(1)
+  const [hasProgress, setHasProgress] = useState<boolean>(false)
 
   useEffect(() => {
     const user = localStorage.getItem('genai_user')
     setUserName(user)
+
+    const updateProgress = () => {
+      const unlocked = getUnlockedLessons()
+      const watched = getWatchedLessons()
+      if (unlocked.length > 1 || watched.length > 0) {
+        setHasProgress(true)
+        setUnlockedCount(Math.min(6, Math.max(1, unlocked.length)))
+      }
+    }
+
+    updateProgress()
+    window.addEventListener('storage', updateProgress)
+    return () => window.removeEventListener('storage', updateProgress)
   }, [])
 
   const handleLogout = () => {
@@ -67,6 +83,21 @@ export function Navbar() {
 
           {/* Right Action / Auth State */}
           <div className="hidden md:flex items-center gap-3">
+            {hasProgress && (
+              <Link
+                href="/course/intro-to-genai"
+                className="inline-flex items-center gap-2 px-2.5 py-1 bg-white hover:bg-stone-50 border border-[#E4E0D7] hover:border-[#18181B] rounded-xs text-[11px] font-mono font-bold text-[#18181B] transition-all shadow-2xs group"
+                title="Resume your active lesson"
+              >
+                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="uppercase tracking-wider">Resume</span>
+                <span className="text-[10px] px-1.5 py-0.2 bg-[#A7F3D0]/60 text-emerald-900 border border-emerald-300 rounded-2xs font-mono font-semibold">
+                  {unlockedCount}/6
+                </span>
+                <ArrowRight className="size-3 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            )}
+
             {userName ? (
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-white border border-[#E4E0D7] text-xs font-medium text-stone-800">
@@ -124,6 +155,22 @@ export function Navbar() {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-[#E4E0D7] bg-[#F7F4EF] px-4 py-4 space-y-3">
+          {hasProgress && (
+            <Link
+              href="/course/intro-to-genai"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between p-2.5 bg-white border border-[#18181B] rounded-xs text-xs font-mono font-bold text-[#18181B] shadow-2xs"
+            >
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="uppercase tracking-wider">Resume Active Course</span>
+              </div>
+              <span className="text-[10px] px-1.5 py-0.5 bg-[#A7F3D0]/60 text-emerald-900 border border-emerald-300 rounded-2xs font-mono">
+                {unlockedCount}/6 Lessons
+              </span>
+            </Link>
+          )}
+
           <nav className="flex flex-col space-y-2">
             <Link
               href="#courses"
