@@ -36,26 +36,11 @@ const LESSON_PROMPTS: Record<string, string[]> = {
     'Give a real-world analogy for pattern recognition in AI',
   ],
   l2: [
-    'Why are CPU registers faster to access than main memory?',
-    'Explain register addressing vs immediate addressing simply',
-    'Why do compilers prioritize storing variables in registers?',
-  ],
-  l3: [
-    'What is a token and how does an LLM process language?',
-    'Explain next-token prediction with an everyday example',
-    'What causes hallucinations in large language models?',
-  ],
-  l4: [
-    'What is an embedding vector in plain, simple terms?',
-    'How does an encoder-decoder model translate between languages?',
-    'Why do similar words end up close together in vector space?',
-  ],
-  l5: [
     'Explain weights and activation functions using a simple analogy',
     'What happens during a forward pass in a neural network?',
     'Why does having multiple hidden layers help learning?',
   ],
-  l6: [
+  l3: [
     'Why does reading a sentence in both directions improve understanding?',
     'What is the role of hidden state in an RNN?',
     'When should you use a bidirectional RNN over a standard one?',

@@ -36,7 +36,7 @@ export default function HomePage() {
     const watched = getWatchedLessons()
     if (unlocked.length > 1 || watched.length > 0) {
       setResumeProgress({
-        unlockedCount: Math.min(6, Math.max(1, unlocked.length)),
+        unlockedCount: Math.min(3, Math.max(1, unlocked.length)),
         watchedCount: watched.length,
       })
     }
@@ -87,11 +87,11 @@ export default function HomePage() {
               </div>
 
               <div>
-                <h1 className="text-[clamp(72px,10vw,140px)] font-black uppercase text-[#18181B] leading-[0.9] tracking-[-0.04em]">
-                  <span className="underline decoration-[#FED7AA] decoration-[8px] md:decoration-[12px] underline-offset-[12px] md:underline-offset-[18px]">
-                    EKLAVYA
-                  </span>
-                </h1>
+              <h1 className="text-[clamp(48px,7vw,96px)] font-black uppercase text-[#18181B] leading-[0.9] tracking-[-0.04em]">
+                <span className="underline decoration-[#FED7AA] decoration-[6px] md:decoration-[8px] underline-offset-[10px] md:underline-offset-[14px]">
+                  EKLAVYA
+                </span>
+              </h1>
 
                 <h2 className="text-[clamp(24px,2.6vw,36px)] font-semibold text-stone-700 tracking-tight mt-4 sm:mt-5">
                   Learn AI Simply: Basics to Beyond
@@ -226,7 +226,7 @@ export default function HomePage() {
               <div className="flex items-center gap-3.5">
                 <div className="size-10 rounded-xs bg-[#A7F3D0] border border-emerald-500 flex flex-col items-center justify-center text-emerald-950 font-bold font-mono shrink-0">
                   <span className="text-xs leading-none">{resumeProgress.unlockedCount}</span>
-                  <span className="text-[9px] text-emerald-800 font-normal leading-none">/6</span>
+                  <span className="text-[9px] text-emerald-800 font-normal leading-none">/3</span>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ export default function HomePage() {
                     <span className="text-xs font-bold text-[#18181B]">Introduction to Generative AI</span>
                   </div>
                   <p className="text-[11px] font-mono text-stone-500 mt-0.5">
-                    {resumeProgress.unlockedCount} of 6 lessons unlocked • Milestone checkpoints active
+                    {resumeProgress.unlockedCount} of 3 lessons unlocked • Milestone checkpoints active
                   </p>
                 </div>
               </div>

@@ -23,7 +23,7 @@ export function Navbar() {
       const watched = getWatchedLessons()
       if (unlocked.length > 1 || watched.length > 0) {
         setHasProgress(true)
-        setUnlockedCount(Math.min(6, Math.max(1, unlocked.length)))
+        setUnlockedCount(Math.min(3, Math.max(1, unlocked.length)))
       } else {
         setHasProgress(false)
         setUnlockedCount(1)
@@ -98,7 +98,7 @@ export function Navbar() {
                 <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="uppercase tracking-wider">Resume</span>
                 <span className="text-[10px] px-1.5 py-0.2 bg-[#A7F3D0]/60 text-emerald-900 border border-emerald-300 rounded-2xs font-mono font-semibold">
-                  {unlockedCount}/6
+                  {unlockedCount}/3
                 </span>
                 <ArrowRight className="size-3 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
               </Link>
@@ -172,7 +172,7 @@ export function Navbar() {
                 <span className="uppercase tracking-wider">Resume Active Course</span>
               </div>
               <span className="text-[10px] px-1.5 py-0.5 bg-[#A7F3D0]/60 text-emerald-900 border border-emerald-300 rounded-2xs font-mono">
-                {unlockedCount}/6 Lessons
+                  {unlockedCount}/3 Lessons
               </span>
             </Link>
           )}

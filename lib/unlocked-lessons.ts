@@ -1,4 +1,4 @@
-export const VALID_LESSON_IDS = ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'] as const
+export const VALID_LESSON_IDS = ['l1', 'l2', 'l3'] as const
 
 const STORAGE_KEY = 'unlockedLessons'
 const WATCHED_STORAGE_KEY = 'watchedLessons'

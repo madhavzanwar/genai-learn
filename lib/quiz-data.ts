@@ -751,11 +751,8 @@ export const quizzesByLesson: Record<
   { title: string; questions: QuizQuestion[] }
 > = {
   l1: { title: 'What is Artificial Intelligence (AI)?', questions: l1Questions },
-  l2: { title: 'Register Addressing Modes', questions: l2Questions },
-  l3: { title: 'Generative AI and Large Language Models', questions: l3Questions },
-  l4: { title: 'Encoders, Decoders, and Vectors', questions: l4Questions },
-  l5: { title: 'Artificial Neural Networks', questions: l5Questions },
-  l6: { title: 'Bidirectional RNNs', questions: l6Questions },
+  l2: { title: 'Artificial Neural Networks', questions: l5Questions },
+  l3: { title: 'Bidirectional RNNs', questions: l6Questions },
 }
 
 export function getQuizForLesson(lessonId: string) {
