@@ -80,7 +80,7 @@ export const courses: Course[] = [
     locked: false,
     thumbnail: '',
     category: 'Data Science',
-    externalUrl: 'https://your-datascience-platform.com',
+    externalUrl: 'https://data-science-lab-nine.vercel.app',
     isExternal: true,
   },
 ]
