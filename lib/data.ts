@@ -107,7 +107,7 @@ export const courseModules: Module[] = [
         type: 'video',
         videoId: 'SzIA32khVQ8',
         description:
-          'Discover how Artificial Intelligence (AI) works and how it powers everyday tools like Google Maps, voice assistants, and recommendation engines. This introductory lesson breaks down key concepts into simple, easy-to-understand topics.\n\nKey Highlights:\n• Real-World Examples: See how AI operates behind the scenes in daily life.\n• Core Concepts: Learn what defines intelligence and how machines learn from data.\n• AI vs. Traditional Tech: Understand the difference between fixed programming, simple automation, and AI.\n• The Future of AI: Explore key industries being transformed and future career opportunities.',
+          'The presentation explains what intelligence means and how humans use experience and knowledge to solve problems and make decisions. It then introduces Artificial Intelligence as the field of creating machines capable of performing tasks that require intelligence.\n\nIt highlights common AI applications such as navigation, recommendations, face recognition, speech understanding, and prediction, before connecting AI with the idea of machines learning from data through Machine Learning.',
       },
       {
         id: 'l2',
@@ -118,7 +118,7 @@ export const courseModules: Module[] = [
         type: 'video',
         videoId: 'VwfVzLH3Ob4',
         description:
-          'Build intuition for artificial neural networks: neurons, layers, weights, and learning from examples. This lesson connects the brain-inspired idea to how models actually train.\n\nKey Highlights:\n• Neurons, weights, and activation functions\n• Input, hidden, and output layers\n• Forward pass and learning from error\n• Why depth helps models learn complex patterns',
+          'This presentation explains the basic concepts of Artificial Neural Networks (ANNs) and how individual neurons process information. It covers important components such as inputs, weights, bias, weighted sum, and activation functions, along with their roles in determining a neuron’s output.\n\nIt also explains the structure of a neural network, including input, hidden, and output layers, and how neurons are connected through weighted connections. Common activation functions such as Sigmoid, Tanh, ReLU, and Leaky ReLU are introduced, highlighting how they add non-linearity and help neural networks learn complex patterns.',
       },
       {
         id: 'l3',
@@ -129,7 +129,7 @@ export const courseModules: Module[] = [
         type: 'video',
         videoId: '8sG-19i-usE',
         description:
-          'Learn how bidirectional RNNs read a sequence both forward and backward so each step can use past and future context. This lesson is useful for language and time-series tasks.\n\nKey Highlights:\n• Why a one-way RNN only sees the past\n• Forward and backward hidden states\n• Combining both directions for richer context\n• Typical uses: tagging, speech, and sequence labeling',
+          'Traditional RNNs read text left to right, so they miss future context — which is a problem for sentences like "The bank was crowded because people were depositing money," where later words are needed to know what "bank" means.\n\nA Bidirectional RNN fixes this by running two RNNs at once — a Forward RNN that processes past context and a Backward RNN that processes future context — then combining both for better understanding. The presentation also clarifies that a Backward RNN is different from backpropagation and briefly connects RNNs, LSTMs, and Bidirectional RNNs.',
       },
     ],
   },
